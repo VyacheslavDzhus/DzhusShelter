@@ -1,0 +1,114 @@
+@page "/"
+
+<PageTitle>Dzhus Shelter</PageTitle>
+
+<!-- Контейнер на весь экран с анимированным фоном -->
+<div class="hero-container">
+    <div class="hero-bg"></div>
+    
+    <!-- Тот самый объемный 3D-текст по центру -->
+    <h1 class="retro-3d-text">
+        <span class="glitch" data-text="DZHUS">DZHUS</span><br/>
+        <span class="glitch" data-text="SHELTER">SHELTER</span>
+    </h1>
+</div>
+
+<div class="nes-container with-title is-dark" style="margin-top: 2rem; position: relative; z-index: 10;">
+    <p class="title">Добро пожаловать</p>
+    <p>Терминал активирован. Выберите нужный раздел.</p>
+</div>
+
+<div class="nes-container with-title is-dark" style="margin-top: 2rem;">
+    <p class="title">Мои навыки (Метрики)</p>
+    
+    <div style="margin-bottom: 1rem;">
+        <span>C# / .NET</span>
+        <progress class="nes-progress is-success" value="80" max="100"></progress>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+        <span>Blazor</span>
+        <progress class="nes-progress is-primary" value="65" max="100"></progress>
+    </div>
+    
+    <div style="margin-bottom: 1rem;">
+        <span>Docker & Деплой</span>
+        <progress class="nes-progress is-warning" value="50" max="100"></progress>
+    </div>
+</div>
+
+<div class="nes-container with-title is-dark" style="margin-top: 2rem;">
+    <p class="title">Интересы и Категории</p>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button type="button" class="nes-btn is-primary">Программирование</button>
+        <button type="button" class="nes-btn is-success">Игры</button>
+        <button type="button" class="nes-btn is-warning">Книги</button>
+        <button type="button" class="nes-btn is-error">Проекты</button>
+    </div>
+</div>
+
+<style>
+    /* Анимация плавного увеличения фона (эффект дыхания/движения) */
+    @@keyframes bgMove {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    .hero-container {
+        position: relative;
+        width: 100%;
+        height: 60vh; /* Высота баннера */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        border: 4px solid #fff; /* Рамка в стиле NES */
+        margin-top: 1rem;
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image: url('/background.jpg');
+        background-size: cover;
+        background-position: center;
+        animation: bgMove 10s infinite ease-in-out;
+        z-index: 1;
+        /* Легкое затемнение, чтобы текст читался лучше */
+        filter: brightness(0.7) contrast(1.1); 
+    }
+
+    /* Объемный консольный 3D текст */
+    .retro-3d-text {
+        position: relative;
+        z-index: 2;
+        font-family: 'Courier New', Courier, monospace; /* Консольный шрифт */
+        font-size: 5rem;
+        font-weight: 900;
+        color: #fff;
+        text-align: center;
+        line-height: 1.1;
+        margin: 0;
+        /* Создаем жесткую 3D-тень */
+        text-shadow: 
+            2px 2px 0px #000,
+            4px 4px 0px #000,
+            6px 6px 0px #000,
+            8px 8px 0px #209cee, /* Синий цвет NES.css */
+            10px 10px 0px #209cee,
+            12px 12px 0px #000;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    /* Левитация текста */
+    @@keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    /* Мобильная адаптация */
+    @@media (max-width: 768px) {
+        .retro-3d-text { font-size: 3rem; }
+    }
+</style>

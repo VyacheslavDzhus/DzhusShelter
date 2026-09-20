@@ -1,0 +1,35 @@
+<div class="pixel-card-wrapper @Class">
+    @if (!string.IsNullOrEmpty(Title) && TitleOverlay)
+    {
+        <div class="pixel-card-title-overlay">@Title</div>
+    }
+
+    <div class="pixel-card-outer">
+        <div class="pixel-corner top-left"></div>
+        <div class="pixel-corner top-right"></div>
+        <div class="pixel-corner bottom-left"></div>
+        <div class="pixel-corner bottom-right"></div>
+        
+        <div class="pixel-card-inner">
+            @if (!string.IsNullOrEmpty(Title) && !TitleOverlay)
+            {
+                <div class="text-center mb-4">
+                    <h3 class="pixel-card-title-inside mb-0">@Title</h3>
+                    @if (!string.IsNullOrEmpty(Subtitle))
+                    {
+                        <p class="pixel-card-subtitle mt-2">@Subtitle</p>
+                    }
+                </div>
+            }
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public bool TitleOverlay { get; set; } = false;
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

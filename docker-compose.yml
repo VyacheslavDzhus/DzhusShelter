@@ -1,0 +1,10 @@
+services:
+  personal-site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: personal-site:latest
+    container_name: personal-site
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

@@ -1,0 +1,62 @@
+.pixel-card-wrapper {
+    position: relative;
+    margin-bottom: 24px;
+    color: #ffffff;
+    image-rendering: pixelated;
+}
+
+.pixel-card-outer {
+    position: relative;
+    background-color: #38383b; /* Medium grey for the 3D frame */
+    padding: 4px; /* Thickness of the frame */
+    border: 2px solid #000000;
+    /* Highlight on ALL sides */
+    box-shadow: inset 0 0 0 2px #5e5e62;
+}
+
+.pixel-card-inner {
+    background-color: #1a1a1c; /* Inner dark background */
+    border: 2px solid #000000;
+    padding: 20px;
+}
+
+.pixel-corner {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: #38383b;
+    border: 2px solid #000000;
+    /* Highlight on ALL sides to match the outer frame */
+    box-shadow: inset 0 0 0 2px #5e5e62;
+    z-index: 2;
+}
+
+/* Position so their borders merge with the outer 2px border */
+.top-left { top: -2px; left: -2px; }
+.top-right { top: -2px; right: -2px; }
+.bottom-left { bottom: -2px; left: -2px; }
+.bottom-right { bottom: -2px; right: -2px; }
+
+.pixel-card-title-overlay {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    background-color: #212529; /* Matches the global page background to "cut" the border */
+    padding: 0 8px;
+    font-size: 18px;
+    font-weight: bold;
+    z-index: 3;
+    text-transform: uppercase;
+}
+
+.pixel-card-title-inside {
+    font-size: 24px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px #000;
+}
+
+.pixel-card-subtitle {
+    font-size: 16px;
+    color: #cccccc;
+    text-shadow: 1px 1px 0px #000;
+}
