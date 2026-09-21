@@ -31,7 +31,7 @@ Hosted in `DzhusShelter.Api`'s `BadHabitsController` (see [docs/architecture.md]
 
 ## Telegram Bot Integration
 
-Inline keyboard flow in `DzhusShelter.TelegramBot`: tap habit type (🚬 Куріння / 🍺 Алкоголь) → tap subtype → bot calls `POST /api/bad-habits/entries` with `OccurredAt = now` → bot confirms in chat. No manual date entry — logging is always "right now."
+Inline keyboard flow in `DzhusShelter.TelegramBot`: `/start` shows a single root button ("🚫 Шкідливі звички") → tap it to reveal habit type (🚬 Куріння / 🍺 Алкоголь) → tap subtype → bot calls `POST /api/bad-habits/entries` with `OccurredAt = now` → bot confirms in chat. No manual date entry — logging is always "right now." The root button exists because this bot process is meant to grow beyond Bad Habits (see below) — it gives a stable top-level menu to hang future feature buttons off of.
 
 This bot process is the same one described in [bots.md](bots.md); reconcile the two specs when the standalone Bots feature is implemented (see architecture doc's open decisions).
 
