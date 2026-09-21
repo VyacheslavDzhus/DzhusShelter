@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="DzhusShelter.UI.csproj" />
-  <Project Path="DzhusShelter.Api/DzhusShelter.Api.csproj" />
-  <Project Path="DzhusShelter.Api.Tests/DzhusShelter.Api.Tests.csproj" />
+  <Project Path="src/DzhusShelter.UI/DzhusShelter.UI.csproj" />
+  <Project Path="src/DzhusShelter.Api/DzhusShelter.Api.csproj" />
+  <Project Path="src/DzhusShelter.Api.Tests/DzhusShelter.Api.Tests.csproj" />
 </Solution>

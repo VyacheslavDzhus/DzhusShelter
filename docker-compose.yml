@@ -2,7 +2,7 @@ services:
   personal-site:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: src/DzhusShelter.UI/Dockerfile
     image: personal-site:latest
     container_name: personal-site
     ports:
