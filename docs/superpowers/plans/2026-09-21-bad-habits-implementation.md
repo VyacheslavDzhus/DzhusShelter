@@ -1445,13 +1445,14 @@ git commit -m "feat(infra): add API and PostgreSQL services to docker-compose"
 
 **Files:**
 - Create: `src/DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj`
+- Create: `src/DzhusShelter.TelegramBot/Program.cs` (minimal placeholder — Task 10 replaces its contents)
 - Create: `src/DzhusShelter.TelegramBot/BadHabitsKeyboard.cs`
 - Create: `src/DzhusShelter.TelegramBot.Tests/DzhusShelter.TelegramBot.Tests.csproj`
 - Create: `src/DzhusShelter.TelegramBot.Tests/BadHabitsKeyboardTests.cs`
 - Modify: `DzhusShelter.slnx`
 
 **Interfaces:**
-- Produces: `BadHabitsKeyboard` — pure logic for building the two-step inline keyboard and parsing callback data back into `(HabitType, HabitSubType)`, kept separate from the `Telegram.Bot` client so it's unit-testable without hitting Telegram's API
+- Produces: `BadHabitsKeyboard` — pure logic for the three-step flow (`/start` → "🚫 Шкідливі звички" root button → habit type → sub-type) and parsing callback data back into `(HabitType, HabitSubType)`, kept separate from the `Telegram.Bot` client so it's unit-testable without hitting Telegram's API
 
 **Prerequisite (yours to do, not automatable):** create a bot via [@BotFather](https://t.me/BotFather) in Telegram and note its token — needed starting Task 10, not this one.
 
@@ -1471,7 +1472,21 @@ Create `src/DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj`:
 </Project>
 ```
 
-Run: `dotnet add src/DzhusShelter.TelegramBot package Telegram.Bot`
+Run:
+```bash
+dotnet add src/DzhusShelter.TelegramBot package Telegram.Bot
+dotnet add src/DzhusShelter.TelegramBot package Microsoft.Extensions.Hosting
+```
+(`Microsoft.NET.Sdk.Worker` doesn't bundle a shared framework the way `Microsoft.NET.Sdk.Web` does for ASP.NET Core — without `Microsoft.Extensions.Hosting` explicitly, the SDK's own auto-generated global-usings file fails to compile with `Microsoft.Extensions.Hosting`/`.Configuration`/`.Logging` not found, even before any of your own code references them.)
+
+`Microsoft.NET.Sdk.Worker` also sets `OutputType=Exe`, which needs an entry point to compile at all — even for a project referenced only for its `BadHabitsKeyboard` type, like this one is until Task 10. Create a minimal placeholder `src/DzhusShelter.TelegramBot/Program.cs` now; Task 10 replaces its contents with the real bot wiring:
+
+```csharp
+var builder = Host.CreateApplicationBuilder(args);
+
+var host = builder.Build();
+host.Run();
+```
 
 - [ ] **Step 2: Scaffold the bot test project**
 
@@ -1568,6 +1583,13 @@ public class BadHabitsKeyboardTests
 
         parsed.Should().BeNull();
     }
+
+    [Fact]
+    public void OpenMenuCallbackData_DoesNotCollideWithHabitTypeOrSubTypeParsing()
+    {
+        BadHabitsKeyboard.TryParseHabitType(BadHabitsKeyboard.OpenMenuCallbackData).Should().BeNull();
+        BadHabitsKeyboard.TryParseSubType(BadHabitsKeyboard.OpenMenuCallbackData).Should().BeNull();
+    }
 }
 ```
 
@@ -1604,6 +1626,13 @@ public static class BadHabitsKeyboard
 {
     private const string HabitTypePrefix = "habit-type:";
     private const string SubTypePrefix = "sub-type:";
+
+    /// <summary>
+    /// Callback data for the single root-menu button ("🚫 Шкідливі звички") shown on /start.
+    /// Tapping it reveals the habit-type buttons — a fixed value, not parameterized, since
+    /// there's only one root menu today.
+    /// </summary>
+    public const string OpenMenuCallbackData = "menu:bad-habits";
 
     private static readonly Dictionary<HabitType, HabitSubType[]> SubTypesByHabitType = new()
     {
@@ -1652,7 +1681,7 @@ public static class BadHabitsKeyboard
 - [ ] **Step 6: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.TelegramBot.Tests`
-Expected: `Passed! - Failed: 0, Passed: 4`
+Expected: `Passed! - Failed: 0, Passed: 5`
 
 - [ ] **Step 7: Commit**
 
@@ -1668,7 +1697,7 @@ git commit -m "feat(bot): scaffold src/DzhusShelter.TelegramBot with habit-loggi
 **Files:**
 - Create: `src/DzhusShelter.TelegramBot/BadHabitsApiClient.cs`
 - Create: `src/DzhusShelter.TelegramBot/BotHostedService.cs`
-- Create: `src/DzhusShelter.TelegramBot/Program.cs`
+- Modify: `src/DzhusShelter.TelegramBot/Program.cs` (replaces Task 9's placeholder)
 - Create: `src/DzhusShelter.TelegramBot/appsettings.json`
 - Create: `src/DzhusShelter.TelegramBot/Dockerfile`
 
@@ -1816,7 +1845,7 @@ public sealed class BotHostedService : BackgroundService
 
 - [ ] **Step 3: Implement `Program.cs`**
 
-Create `src/DzhusShelter.TelegramBot/Program.cs`:
+Modify `src/DzhusShelter.TelegramBot/Program.cs` — replace Task 9's placeholder contents:
 
 ```csharp
 using DzhusShelter.TelegramBot;

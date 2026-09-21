@@ -3,4 +3,6 @@
   <Project Path="src/DzhusShelter.Api/DzhusShelter.Api.csproj" />
   <Project Path="src/DzhusShelter.Api.Tests/DzhusShelter.Api.Tests.csproj" />
   <Project Path="src/DzhusShelter.Api.IntegrationTests/DzhusShelter.Api.IntegrationTests.csproj" />
+  <Project Path="src/DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj" />
+  <Project Path="src/DzhusShelter.TelegramBot.Tests/DzhusShelter.TelegramBot.Tests.csproj" />
 </Solution>
