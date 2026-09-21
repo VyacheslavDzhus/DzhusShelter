@@ -1,6 +1,6 @@
 # Bad Habits
 
-**Route:** `/bad-habits` · **Status:** Spec'd (rewritten — see history below) · **Architecture:** [docs/architecture.md](../architecture.md)
+**Route:** `/bad-habits` · **Status:** Implemented · **Architecture:** [docs/architecture.md](../architecture.md)
 
 ## Overview
 
@@ -25,7 +25,7 @@ This replaces the original "streak counter" version of this spec (single habit, 
 ## API
 
 - `POST /api/bad-habits/entries` — logs one occurrence. Called by the Telegram bot.
-- `GET /api/bad-habits/entries?from=&to=&type=&subType=` — returns entries for the chart. Called by Blazor.
+- `GET /api/bad-habits/entries?from=&to=&habitType=&subType=` — returns entries for the chart. Called by Blazor.
 
 Hosted in `DzhusShelter.Api`'s `BadHabitsController` (see [docs/architecture.md](../architecture.md) for why this isn't in the Blazor project directly).
 
@@ -43,11 +43,11 @@ This bot process is the same one described in [bots.md](bots.md); reconcile the 
 
 PostgreSQL via EF Core, per [docs/architecture.md](../architecture.md) (the earlier Postgres-vs-MongoDB "TBD" for this feature is resolved: relational fits an event log with date-range/type filtering well, no reason to reach for Mongo here).
 
-## Open Decisions
+## Open Decisions (resolved during implementation)
 
-- Exact shape of `GetHabitEntriesQuery`'s response (raw entries vs server-side pre-aggregated per-day counts) — decide during implementation based on what's simplest for the chosen chart library to consume
-- Whether `Notes` is ever surfaced in the bot flow (e.g. an optional follow-up message) or stays API-only for now — default to API-only, add a bot prompt later if wanted
-- No auth between bot/Blazor/API yet — see [docs/architecture.md](../architecture.md)'s Security section for the condition that makes this acceptable (API never exposed outside the private Docker network)
+- `GetHabitEntriesQuery` returns raw entries (`HabitEntryDto` list); per-day aggregation for the chart happens client-side in `BadHabits.razor`, not server-side — kept the API generic in case another consumer wants unaggregated data later
+- `Notes` stayed API-only — the bot flow doesn't prompt for it, always logs `null`
+- Still genuinely open: no auth between bot/Blazor/API — see [docs/architecture.md](../architecture.md)'s Security section for the condition that makes this acceptable in the current deployment (API's port isn't published in `docker-compose.yml`)
 
 ## Out of Scope
 

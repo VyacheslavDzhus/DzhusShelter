@@ -31,7 +31,7 @@
 **Interfaces:**
 - Produces: a running, empty ASP.NET Core Web API (`public partial class Program` for later `WebApplicationFactory<Program>` use in tests), controllers + JSON enum-as-string convention wired up, ready for feature code.
 
-- [ ] **Step 1: Create the project file and add the Swagger package**
+- [x] **Step 1: Create the project file and add the Swagger package**
 
 Create `src/DzhusShelter.Api/DzhusShelter.Api.csproj`:
 
@@ -49,7 +49,7 @@ Create `src/DzhusShelter.Api/DzhusShelter.Api.csproj`:
 
 Run: `dotnet add src/DzhusShelter.Api package Swashbuckle.AspNetCore`
 
-- [ ] **Step 2: Create `Program.cs`**
+- [x] **Step 2: Create `Program.cs`**
 
 Create `src/DzhusShelter.Api/Program.cs`:
 
@@ -78,7 +78,7 @@ app.Run();
 public partial class Program;
 ```
 
-- [ ] **Step 3: Add the project to the solution**
+- [x] **Step 3: Add the project to the solution**
 
 Modify `DzhusShelter.slnx` — replace the file with:
 
@@ -89,12 +89,12 @@ Modify `DzhusShelter.slnx` — replace the file with:
 </Solution>
 ```
 
-- [ ] **Step 4: Build to verify**
+- [x] **Step 4: Build to verify**
 
 Run: `dotnet build src/DzhusShelter.Api/DzhusShelter.Api.csproj`
 Expected: `Build succeeded. 0 Warning(s) 0 Error(s)`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/DzhusShelter.Api DzhusShelter.slnx
@@ -126,7 +126,7 @@ git commit -m "feat(api): scaffold src/DzhusShelter.Api project"
   - `HabitEntry.Create(HabitType, HabitSubType, DateTimeOffset occurredAt, string? notes, TimeProvider) : Result<HabitEntry>`
   - `HabitEntry` readonly properties: `Id (Guid)`, `HabitType`, `SubType`, `OccurredAt (DateTimeOffset)`, `Notes (string?)`
 
-- [ ] **Step 1: Scaffold the test project**
+- [x] **Step 1: Scaffold the test project**
 
 Create `src/DzhusShelter.Api.Tests/DzhusShelter.Api.Tests.csproj`:
 
@@ -173,7 +173,7 @@ Create `src/DzhusShelter.Api.Tests/GlobalUsings.cs` (`ImplicitUsings` only cover
 global using Xunit;
 ```
 
-- [ ] **Step 2: Write the failing domain tests**
+- [x] **Step 2: Write the failing domain tests**
 
 Create `src/DzhusShelter.Api.Tests/Domain/HabitEntryTests.cs`:
 
@@ -221,12 +221,12 @@ public class HabitEntryTests
 }
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail to compile**
+- [x] **Step 3: Run the tests to verify they fail to compile**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: build errors — `HabitEntry`, `HabitType`, `HabitSubType`, `HabitEntryErrors` don't exist yet.
 
-- [ ] **Step 4: Implement `Error` and `Result`**
+- [x] **Step 4: Implement `Error` and `Result`**
 
 Create `src/DzhusShelter.Api/Domain/Common/Error.cs`:
 
@@ -282,7 +282,7 @@ public class Result<TValue> : Result
 }
 ```
 
-- [ ] **Step 5: Implement the enums and error catalog**
+- [x] **Step 5: Implement the enums and error catalog**
 
 Create `src/DzhusShelter.Api/Domain/BadHabits/HabitType.cs`:
 
@@ -328,7 +328,7 @@ public static class HabitEntryErrors
 }
 ```
 
-- [ ] **Step 6: Implement `HabitEntry`**
+- [x] **Step 6: Implement `HabitEntry`**
 
 Create `src/DzhusShelter.Api/Domain/BadHabits/HabitEntry.cs`:
 
@@ -383,12 +383,12 @@ public sealed class HabitEntry
 }
 ```
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: `Passed! - Failed: 0, Passed: 3`
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/DzhusShelter.Api src/DzhusShelter.Api.Tests DzhusShelter.slnx
@@ -417,11 +417,11 @@ git commit -m "feat(api): add Result pattern and HabitEntry domain model"
   - `record LogHabitEntryCommand(HabitType HabitType, HabitSubType SubType, DateTimeOffset OccurredAt, string? Notes)`
   - `LogHabitEntryCommandHandler : ICommandHandler<LogHabitEntryCommand, Result<Guid>>`
 
-- [ ] **Step 1: Add the FluentValidation package**
+- [x] **Step 1: Add the FluentValidation package**
 
 Run: `dotnet add src/DzhusShelter.Api package FluentValidation`
 
-- [ ] **Step 2: Write the failing handler test**
+- [x] **Step 2: Write the failing handler test**
 
 Create `src/DzhusShelter.Api.Tests/Application/LogHabitEntryCommandHandlerTests.cs`:
 
@@ -469,12 +469,12 @@ public class LogHabitEntryCommandHandlerTests
 }
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail to compile**
+- [x] **Step 3: Run the tests to verify they fail to compile**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: build errors — the application types don't exist yet.
 
-- [ ] **Step 4: Implement the CQRS abstractions**
+- [x] **Step 4: Implement the CQRS abstractions**
 
 Create `src/DzhusShelter.Api/Application/Abstractions/ICommandHandler.cs`:
 
@@ -498,7 +498,7 @@ public interface IQueryHandler<in TQuery, TResponse>
 }
 ```
 
-- [ ] **Step 5: Implement the repository abstraction**
+- [x] **Step 5: Implement the repository abstraction**
 
 Create `src/DzhusShelter.Api/Application/BadHabits/IHabitEntryRepository.cs`:
 
@@ -520,7 +520,7 @@ public interface IHabitEntryRepository
 }
 ```
 
-- [ ] **Step 6: Implement the command, validator, and handler**
+- [x] **Step 6: Implement the command, validator, and handler**
 
 Create `src/DzhusShelter.Api/Application/BadHabits/LogHabitEntryCommand.cs`:
 
@@ -592,12 +592,12 @@ public sealed class LogHabitEntryCommandHandler : ICommandHandler<LogHabitEntryC
 }
 ```
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: `Passed! - Failed: 0, Passed: 5`
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/DzhusShelter.Api src/DzhusShelter.Api.Tests
@@ -622,7 +622,7 @@ git commit -m "feat(api): add LogHabitEntryCommand with CQRS write handler"
   - `record GetHabitEntriesQuery(DateTimeOffset From, DateTimeOffset To, HabitType? HabitType, HabitSubType? SubType)`
   - `GetHabitEntriesQueryHandler : IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>`
 
-- [ ] **Step 1: Write the failing query handler test**
+- [x] **Step 1: Write the failing query handler test**
 
 Create `src/DzhusShelter.Api.Tests/Application/GetHabitEntriesQueryHandlerTests.cs`:
 
@@ -673,12 +673,12 @@ public class GetHabitEntriesQueryHandlerTests
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail to compile**
+- [x] **Step 2: Run the tests to verify they fail to compile**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: build errors — `HabitEntryDto`, `GetHabitEntriesQuery`, `GetHabitEntriesQueryValidator`, `GetHabitEntriesQueryHandler` don't exist yet.
 
-- [ ] **Step 3: Implement the DTO, query, validator, and handler**
+- [x] **Step 3: Implement the DTO, query, validator, and handler**
 
 Create `src/DzhusShelter.Api/Application/BadHabits/HabitEntryDto.cs`:
 
@@ -755,12 +755,12 @@ public sealed class GetHabitEntriesQueryHandler : IQueryHandler<GetHabitEntriesQ
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: `Passed! - Failed: 0, Passed: 7`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/DzhusShelter.Api src/DzhusShelter.Api.Tests
@@ -783,7 +783,7 @@ git commit -m "feat(api): add GetHabitEntriesQuery with CQRS read handler"
 - Consumes: `HabitEntry`, `IHabitEntryRepository` from Tasks 2–3
 - Produces: `AppDbContext` (registered in DI), `EfHabitEntryRepository : IHabitEntryRepository` (registered in DI), an EF Core migration named `InitialCreate`
 
-- [ ] **Step 1: Add EF Core / Npgsql packages**
+- [x] **Step 1: Add EF Core / Npgsql packages**
 
 Run:
 ```bash
@@ -801,7 +801,7 @@ If `Microsoft.EntityFrameworkCore.Design` resolved to a *different* version than
 dotnet add src/DzhusShelter.Api package Microsoft.EntityFrameworkCore.Design --version <the version Npgsql pulls>
 ```
 
-- [ ] **Step 2: Implement the DbContext and entity configuration**
+- [x] **Step 2: Implement the DbContext and entity configuration**
 
 Create `src/DzhusShelter.Api/Infrastructure/AppDbContext.cs`:
 
@@ -850,7 +850,7 @@ public sealed class HabitEntryConfiguration : IEntityTypeConfiguration<HabitEntr
 }
 ```
 
-- [ ] **Step 3: Implement the repository**
+- [x] **Step 3: Implement the repository**
 
 Create `src/DzhusShelter.Api/Infrastructure/BadHabits/EfHabitEntryRepository.cs`:
 
@@ -897,7 +897,7 @@ public sealed class EfHabitEntryRepository : IHabitEntryRepository
 }
 ```
 
-- [ ] **Step 4: Wire DI, configuration, and auto-migration into `Program.cs`**
+- [x] **Step 4: Wire DI, configuration, and auto-migration into `Program.cs`**
 
 Modify `src/DzhusShelter.Api/Program.cs` — replace its contents:
 
@@ -948,7 +948,7 @@ app.Run();
 public partial class Program;
 ```
 
-- [ ] **Step 5: Add configuration files**
+- [x] **Step 5: Add configuration files**
 
 Create `src/DzhusShelter.Api/appsettings.json`:
 
@@ -980,19 +980,19 @@ Create `src/DzhusShelter.Api/appsettings.Development.json`:
 }
 ```
 
-- [ ] **Step 6: Generate the initial migration**
+- [x] **Step 6: Generate the initial migration**
 
 Run: `dotnet ef migrations add InitialCreate --project src/DzhusShelter.Api --startup-project src/DzhusShelter.Api`
 Expected: a `src/DzhusShelter.Api/Migrations/` folder is created containing `..._InitialCreate.cs` and `AppDbContextModelSnapshot.cs`, creating a `HabitEntries` table.
 
-- [ ] **Step 7: Build to verify**
+- [x] **Step 7: Build to verify**
 
 Run: `dotnet build src/DzhusShelter.Api`
 Expected: `Build succeeded. 0 Warning(s) 0 Error(s)`
 
 (Full round-trip against a real PostgreSQL is verified in Task 8's Testcontainers test — this task only needs to compile and produce a valid migration; don't reach for the EF Core InMemory provider to "test" it here.)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/DzhusShelter.Api
@@ -1011,7 +1011,7 @@ git commit -m "feat(api): add EF Core + PostgreSQL infrastructure and initial mi
 - Consumes: `ICommandHandler<LogHabitEntryCommand, Result<Guid>>`, `IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>` from Tasks 3–4
 - Produces: `POST /api/bad-habits/entries`, `GET /api/bad-habits/entries?from=&to=&habitType=&subType=`
 
-- [ ] **Step 1: Write the failing controller tests**
+- [x] **Step 1: Write the failing controller tests**
 
 Create `src/DzhusShelter.Api.Tests/Controllers/BadHabitsControllerTests.cs`:
 
@@ -1084,12 +1084,12 @@ public class BadHabitsControllerTests
 }
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail to compile**
+- [x] **Step 2: Run the tests to verify they fail to compile**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: build error — `BadHabitsController` doesn't exist yet.
 
-- [ ] **Step 3: Implement the controller**
+- [x] **Step 3: Implement the controller**
 
 Create `src/DzhusShelter.Api/Controllers/BadHabitsController.cs`:
 
@@ -1136,12 +1136,12 @@ public sealed class BadHabitsController : ControllerBase
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.Api.Tests`
 Expected: `Passed! - Failed: 0, Passed: 10`
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/DzhusShelter.Api src/DzhusShelter.Api.Tests
@@ -1164,7 +1164,7 @@ git commit -m "feat(api): add BadHabitsController"
 
 **Prerequisite:** Docker must be running locally (Docker Desktop or an equivalent daemon) — `Testcontainers` starts a real `postgres` container for this test.
 
-- [ ] **Step 1: Scaffold the integration test project**
+- [x] **Step 1: Scaffold the integration test project**
 
 Create `src/DzhusShelter.Api.IntegrationTests/DzhusShelter.Api.IntegrationTests.csproj`:
 
@@ -1212,7 +1212,7 @@ Create `src/DzhusShelter.Api.IntegrationTests/GlobalUsings.cs`:
 global using Xunit;
 ```
 
-- [ ] **Step 2: Write the test factory**
+- [x] **Step 2: Write the test factory**
 
 Create `src/DzhusShelter.Api.IntegrationTests/ApiWebApplicationFactory.cs`:
 
@@ -1252,7 +1252,7 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>, I
 }
 ```
 
-- [ ] **Step 3: Write the failing end-to-end test**
+- [x] **Step 3: Write the failing end-to-end test**
 
 Create `src/DzhusShelter.Api.IntegrationTests/BadHabitsEndpointsTests.cs`:
 
@@ -1306,17 +1306,17 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
 }
 ```
 
-- [ ] **Step 4: Run the test to verify it fails**
+- [x] **Step 4: Run the test to verify it fails**
 
 Run: `dotnet test src/DzhusShelter.Api.IntegrationTests`
 Expected: FAIL (or build error) before the factory/test wiring above exists — confirm it fails for the *expected* reason (missing types), then proceed; if Docker isn't running, this step instead fails with a Testcontainers connection error — start Docker before continuing.
 
-- [ ] **Step 5: Run the test to verify it passes**
+- [x] **Step 5: Run the test to verify it passes**
 
 Run: `dotnet test src/DzhusShelter.Api.IntegrationTests`
 Expected: `Passed! - Failed: 0, Passed: 1` (takes longer than unit tests — it's pulling/starting a real Postgres container)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/DzhusShelter.Api.IntegrationTests DzhusShelter.slnx
@@ -1335,7 +1335,7 @@ git commit -m "test(api): add Testcontainers-based integration test for Bad Habi
 **Interfaces:**
 - Produces: `api` and `postgres` services runnable via `docker compose up`, with `api`'s port kept internal to the compose network (per Global Constraints)
 
-- [ ] **Step 1: Write the API Dockerfile**
+- [x] **Step 1: Write the API Dockerfile**
 
 Create `src/DzhusShelter.Api/Dockerfile`:
 
@@ -1363,7 +1363,7 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DzhusShelter.Api.dll"]
 ```
 
-- [ ] **Step 2: Update `docker-compose.yml`**
+- [x] **Step 2: Update `docker-compose.yml`**
 
 Modify `docker-compose.yml` — replace its contents:
 
@@ -1416,7 +1416,7 @@ volumes:
   postgres-data:
 ```
 
-- [ ] **Step 3: Document required environment variables**
+- [x] **Step 3: Document required environment variables**
 
 Create `.env.example`:
 
@@ -1426,7 +1426,7 @@ POSTGRES_PASSWORD=change-me
 
 (`.env` itself is already gitignored — copy this file to `.env` locally and fill in a real password; docker-compose reads `.env` automatically.)
 
-- [ ] **Step 4: Verify manually**
+- [x] **Step 4: Verify manually**
 
 Run:
 ```bash
@@ -1437,7 +1437,7 @@ Expected: all three containers (`personal-site`, `dzhusshelter-api`, `dzhusshelt
 
 Stop with `docker compose down` when confirmed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/DzhusShelter.Api/Dockerfile docker-compose.yml .env.example
@@ -1461,7 +1461,7 @@ git commit -m "feat(infra): add API and PostgreSQL services to docker-compose"
 
 **Prerequisite (yours to do, not automatable):** create a bot via [@BotFather](https://t.me/BotFather) in Telegram and note its token — needed starting Task 10, not this one.
 
-- [ ] **Step 1: Scaffold the bot project**
+- [x] **Step 1: Scaffold the bot project**
 
 Create `src/DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj`:
 
@@ -1493,7 +1493,7 @@ var host = builder.Build();
 host.Run();
 ```
 
-- [ ] **Step 2: Scaffold the bot test project**
+- [x] **Step 2: Scaffold the bot test project**
 
 Create `src/DzhusShelter.TelegramBot.Tests/DzhusShelter.TelegramBot.Tests.csproj`:
 
@@ -1541,7 +1541,7 @@ Create `src/DzhusShelter.TelegramBot.Tests/GlobalUsings.cs`:
 global using Xunit;
 ```
 
-- [ ] **Step 3: Write the failing keyboard tests**
+- [x] **Step 3: Write the failing keyboard tests**
 
 Create `src/DzhusShelter.TelegramBot.Tests/BadHabitsKeyboardTests.cs`:
 
@@ -1598,12 +1598,12 @@ public class BadHabitsKeyboardTests
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they fail to compile**
+- [x] **Step 4: Run the tests to verify they fail to compile**
 
 Run: `dotnet test src/DzhusShelter.TelegramBot.Tests`
 Expected: build errors — `HabitType`, `HabitSubType`, `BadHabitsKeyboard` don't exist in this project yet.
 
-- [ ] **Step 5: Implement local `HabitType`/`HabitSubType` enums and the keyboard logic**
+- [x] **Step 5: Implement local `HabitType`/`HabitSubType` enums and the keyboard logic**
 
 The bot is a separate deployable from the API and doesn't reference it — it keeps its own copy of these two small enums (they must stay in sync with `src/DzhusShelter.Api`'s by value; this duplication is an accepted, explicit trade-off of not sharing a library between the two processes yet).
 
@@ -1683,12 +1683,12 @@ public static class BadHabitsKeyboard
 }
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `dotnet test src/DzhusShelter.TelegramBot.Tests`
 Expected: `Passed! - Failed: 0, Passed: 5`
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/DzhusShelter.TelegramBot src/DzhusShelter.TelegramBot.Tests DzhusShelter.slnx
@@ -1712,7 +1712,7 @@ git commit -m "feat(bot): scaffold src/DzhusShelter.TelegramBot with habit-loggi
 
 **Prerequisite:** the bot token from Task 9's BotFather step, and your own Telegram numeric chat ID (message [@userinfobot](https://t.me/userinfobot) to get it) so the bot only responds to you.
 
-- [ ] **Step 1: Implement the typed API client**
+- [x] **Step 1: Implement the typed API client**
 
 Create `src/DzhusShelter.TelegramBot/BadHabitsApiClient.cs`:
 
@@ -1741,7 +1741,7 @@ public sealed class BadHabitsApiClient
 }
 ```
 
-- [ ] **Step 2: Implement the bot hosted service**
+- [x] **Step 2: Implement the bot hosted service**
 
 Create `src/DzhusShelter.TelegramBot/BotHostedService.cs`:
 
@@ -1870,7 +1870,7 @@ public sealed class BotHostedService : BackgroundService
 }
 ```
 
-- [ ] **Step 3: Implement `Program.cs`**
+- [x] **Step 3: Implement `Program.cs`**
 
 Modify `src/DzhusShelter.TelegramBot/Program.cs` — replace Task 9's placeholder contents:
 
@@ -1898,7 +1898,7 @@ host.Run();
 
 Run: `dotnet add src/DzhusShelter.TelegramBot package Microsoft.Extensions.Http` (`AddHttpClient` isn't available from `Microsoft.Extensions.Hosting` alone — it's a separate package, bundled automatically only in `Microsoft.NET.Sdk.Web` projects, not `Sdk.Worker`).
 
-- [ ] **Step 4: Add local configuration (secrets stay out of git)**
+- [x] **Step 4: Add local configuration (secrets stay out of git)**
 
 Create `src/DzhusShelter.TelegramBot/appsettings.json`:
 
@@ -1927,7 +1927,7 @@ dotnet user-secrets set "Telegram:BotToken" "<token from BotFather>" --project s
 dotnet user-secrets set "Telegram:AllowedChatId" "<your numeric chat id>" --project src/DzhusShelter.TelegramBot
 ```
 
-- [ ] **Step 5: Add the bot's Dockerfile**
+- [x] **Step 5: Add the bot's Dockerfile**
 
 Create `src/DzhusShelter.TelegramBot/Dockerfile`:
 
@@ -1954,17 +1954,17 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "DzhusShelter.TelegramBot.dll"]
 ```
 
-- [ ] **Step 6: Build to verify**
+- [x] **Step 6: Build to verify**
 
 Run: `dotnet build src/DzhusShelter.TelegramBot`
 Expected: `Build succeeded. 0 Warning(s) 0 Error(s)`. If this fails on the `Telegram.Bot` API calls in `BotHostedService.cs` (method names on `ITelegramBotClient` do shift between package versions — e.g. `SendMessage` vs `SendTextMessageAsync`, `AnswerCallbackQuery` vs `AnswerCallbackQueryAsync`), check the installed package version's actual member names (IntelliSense/`dotnet-format` or the package's IntelliSense XML docs) and adjust the call sites to match — the logic/flow stays the same, only the exact method name changes.
 
-- [ ] **Step 7: Verify manually end-to-end**
+- [x] **Step 7: Verify manually end-to-end**
 
 Run the API locally (`dotnet run --project src/DzhusShelter.Api`, with PostgreSQL reachable — e.g. via `docker compose up postgres`), then run the bot with `DOTNET_ENVIRONMENT=Development dotnet run --project src/DzhusShelter.TelegramBot`. The explicit `DOTNET_ENVIRONMENT=Development` matters: `Host.CreateApplicationBuilder` only auto-loads user secrets when the environment is Development, and it defaults to Production when unset — without it the bot silently reads the empty `BotToken` placeholder from `appsettings.json` instead of your real secret and fails with "Bot token invalid" (easy to misread as a bad token when it's actually just an unset environment). In Telegram, message your bot `/start`, tap "🚫 Шкідливі звички", tap "🚬 Куріння", then "Cigarette".
 Expected: the bot replies "Записано: Cigarette", and `GET http://localhost:5000/api/bad-habits/entries?from=...&to=...` (via Swagger UI or curl) shows the new entry.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/DzhusShelter.TelegramBot
@@ -1985,11 +1985,11 @@ git commit -m "feat(bot): wire live Telegram bot flow to src/DzhusShelter.Api"
 - Consumes: `GET /api/bad-habits/entries` from Task 6
 - Produces: a working `/bad-habits` page with date-range + type/subtype filters and a chart
 
-- [ ] **Step 1: Add the chart package**
+- [x] **Step 1: Add the chart package**
 
 Run: `dotnet add src/DzhusShelter.UI/DzhusShelter.UI.csproj package Blazor-ApexCharts`
 
-- [ ] **Step 2: Implement the typed API client**
+- [x] **Step 2: Implement the typed API client**
 
 Create `src/DzhusShelter.UI/Services/BadHabitsApiClient.cs`:
 
@@ -2052,7 +2052,7 @@ public sealed class BadHabitsApiClient
 }
 ```
 
-- [ ] **Step 3: Register the HttpClient in `Program.cs`**
+- [x] **Step 3: Register the HttpClient in `Program.cs`**
 
 Modify `src/DzhusShelter.UI/Program.cs` — add before `var app = builder.Build();`:
 
@@ -2068,7 +2068,7 @@ builder.Services.AddHttpClient<BadHabitsApiClient>(client =>
         ?? throw new InvalidOperationException("Api:BaseUrl is not configured.")));
 ```
 
-- [ ] **Step 4: Add `Api:BaseUrl` to configuration**
+- [x] **Step 4: Add `Api:BaseUrl` to configuration**
 
 Modify `src/DzhusShelter.UI/appsettings.Development.json` — add:
 
@@ -2088,7 +2088,7 @@ Modify `src/DzhusShelter.UI/appsettings.Development.json` — add:
 
 (Adjust the `Logging` section to keep whatever is already there — only the `Api` section is new.)
 
-- [ ] **Step 5: Rewrite `BadHabits.razor`**
+- [x] **Step 5: Rewrite `BadHabits.razor`**
 
 Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its contents. Note the `@rendermode InteractiveServer` directive: none of this repo's other pages set a render mode, and `Program.cs`'s `AddInteractiveServerRenderMode()` only makes server interactivity *available*, it doesn't turn it on by default per page. Without this directive the page still compiles and does an initial static render (so a first look can be misleading — the filters and chart container appear in the HTML), but `@bind:after` never fires and the ApexChart component never gets a live circuit to run its JS interop in, so the chart div stays permanently empty with no error anywhere:
 
@@ -2189,7 +2189,7 @@ Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its co
 }
 ```
 
-- [ ] **Step 6: Register the ApexCharts service**
+- [x] **Step 6: Register the ApexCharts service**
 
 Modify `src/DzhusShelter.UI/Program.cs` — add alongside the other `builder.Services` calls:
 
@@ -2199,18 +2199,18 @@ builder.Services.AddApexCharts();
 
 and add `using ApexCharts;` to the top of the file.
 
-- [ ] **Step 7: Build to verify**
+- [x] **Step 7: Build to verify**
 
 Run: `dotnet build src/DzhusShelter.UI/DzhusShelter.UI.csproj`
 Expected: `Build succeeded. 0 Warning(s) 0 Error(s)`. If this fails on the `ApexChart`/`ApexPointSeries` component parameters in `BadHabits.razor` (Blazor-ApexCharts' exact parameter names can shift between versions), check the installed package version's sample usage (its GitHub README/NuGet page) and adjust the markup to match — same chart, same data binding, only parameter names may differ.
 
-- [ ] **Step 8: Verify manually in the browser**
+- [x] **Step 8: Verify manually in the browser**
 
 Run: `dotnet run --project src/DzhusShelter.Api` (in one terminal, with Postgres up via `docker compose up postgres`), then `dotnet run --project src/DzhusShelter.UI/DzhusShelter.UI.csproj` (in another).
 Open `/bad-habits` in a browser.
 Expected: the page loads without errors, shows "Немає записів за обраний період." if nothing's logged yet, or a bar chart once at least one entry exists (log one via the bot from Task 10, then change a filter to trigger `ReloadAsync` and confirm the chart updates).
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/DzhusShelter.UI/Services src/DzhusShelter.UI/Components/Pages/BadHabits.razor src/DzhusShelter.UI/Program.cs src/DzhusShelter.UI/appsettings.Development.json src/DzhusShelter.UI/DzhusShelter.UI.csproj
@@ -2229,7 +2229,7 @@ git commit -m "feat(ui): rewrite Bad Habits page to call the API with filters an
 **Interfaces:**
 - Produces: all four services (`personal-site`, `api`, `bot`, `postgres`) runnable together via one `docker compose up`
 
-- [ ] **Step 1: Add the bot service and finish wiring env vars**
+- [x] **Step 1: Add the bot service and finish wiring env vars**
 
 Modify `docker-compose.yml` — replace its contents:
 
@@ -2295,7 +2295,7 @@ volumes:
   postgres-data:
 ```
 
-- [ ] **Step 2: Update `.env.example`**
+- [x] **Step 2: Update `.env.example`**
 
 Modify `.env.example`:
 
@@ -2305,7 +2305,7 @@ TELEGRAM_BOT_TOKEN=change-me
 TELEGRAM_ALLOWED_CHAT_ID=change-me
 ```
 
-- [ ] **Step 3: Verify the full stack manually**
+- [x] **Step 3: Verify the full stack manually**
 
 Run:
 ```bash
@@ -2317,7 +2317,7 @@ Expected: all four containers start; messaging the bot `/start` and logging an e
 
 Stop with `docker compose down` when confirmed.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docker-compose.yml .env.example
@@ -2336,7 +2336,7 @@ git commit -m "feat(infra): wire Telegram bot into docker-compose alongside API 
 **Interfaces:**
 - None — documentation only.
 
-- [ ] **Step 1: Flip the Bad Habits spec status**
+- [x] **Step 1: Flip the Bad Habits spec status**
 
 Modify `docs/specs/bad-habits.md` — change the header line:
 
@@ -2344,7 +2344,7 @@ Modify `docs/specs/bad-habits.md` — change the header line:
 **Route:** `/bad-habits` · **Status:** Implemented · **Architecture:** [docs/architecture.md](../architecture.md)
 ```
 
-- [ ] **Step 2: Update the feature status table**
+- [x] **Step 2: Update the feature status table**
 
 Modify `docs/specs/README.md` — change the Bad Habits row:
 
@@ -2352,7 +2352,7 @@ Modify `docs/specs/README.md` — change the Bad Habits row:
 | Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Implemented |
 ```
 
-- [ ] **Step 3: Add a roadmap progress log entry**
+- [x] **Step 3: Add a roadmap progress log entry**
 
 Modify `docs/roadmap.md` — add a new line under "Progress log" (keep the existing 2026-09-21 line above it):
 
@@ -2360,7 +2360,7 @@ Modify `docs/roadmap.md` — add a new line under "Progress log" (keep the exist
 - **(today's date)** — Bad Habits implemented end-to-end: `src/DzhusShelter.Api` (Clean Architecture + CQRS + FluentValidation + EF Core/PostgreSQL), `src/DzhusShelter.TelegramBot` (long-polling bot logging events), `src/DzhusShelter.UI` (Blazor-ApexCharts dashboard with filters). First real use of `Testcontainers`. Topics exercised for real: Clean Architecture, CQRS, Result pattern, FluentValidation, PostgreSQL/EF Core, Docker Compose multi-service, xUnit/NSubstitute/Testcontainers.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/specs/bad-habits.md docs/specs/README.md docs/roadmap.md

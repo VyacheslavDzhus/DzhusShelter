@@ -11,7 +11,7 @@ This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md)
 | Finance | `/finance` | [finance.md](finance.md) | Mockup |
 | Exchange | `/exchange` | [exchange.md](exchange.md) | Mockup |
 | Gym | `/gym` | [gym.md](gym.md) | Mockup |
-| Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Spec'd |
+| Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Implemented |
 | Screen Time | `/screen-time` | [screen-time.md](screen-time.md) | Mockup |
 | Weather | `/weather` | [weather.md](weather.md) | Mockup |
 | Bots | `/bots` | [bots.md](bots.md) | Mockup |
