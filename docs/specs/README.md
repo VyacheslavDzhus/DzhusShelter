@@ -1,6 +1,6 @@
 # Dzhus Shelter — Feature Specs
 
-Personal Blazor Server dashboard, single user, no auth. Each feature below starts as a static mockup in `Components/Pages/` and gets built out one at a time, spec first — see the `add-feature-page` skill.
+Personal dashboard, single user, no auth. Each feature below starts as a static mockup and gets built out one at a time, spec first — see the `add-feature-page` skill. As of [docs/architecture.md](../architecture.md), features built from here on live in `DzhusShelter.Api` (Clean Architecture + CQRS) with `DzhusShelter.UI`/`DzhusShelter.TelegramBot` as clients — specs written before that doc (Finance, Exchange, Gym, Screen Time, Weather, Bots, Schedule) still describe the old "Blazor does it all" shape and get updated when their turn comes.
 
 This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md) for the curriculum and the suggested order to build these features in.
 
@@ -11,7 +11,7 @@ This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md)
 | Finance | `/finance` | [finance.md](finance.md) | Mockup |
 | Exchange | `/exchange` | [exchange.md](exchange.md) | Mockup |
 | Gym | `/gym` | [gym.md](gym.md) | Mockup |
-| Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Mockup |
+| Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Spec'd |
 | Screen Time | `/screen-time` | [screen-time.md](screen-time.md) | Mockup |
 | Weather | `/weather` | [weather.md](weather.md) | Mockup |
 | Bots | `/bots` | [bots.md](bots.md) | Mockup |

@@ -15,13 +15,13 @@ Uses `appsettings.Development.json`. Blazor Server with interactive server rende
 
 ## Docker
 
-Build and run via the existing [Dockerfile](../../../Dockerfile) and [docker-compose.yml](../../../docker-compose.yml):
+Build and run via [docker-compose.yml](../../../docker-compose.yml):
 
 ```bash
 docker compose up --build
 ```
 
-Check `docker-compose.yml` for the exposed port and any env vars it passes through before assuming defaults.
+As of [docs/architecture.md](../../../docs/architecture.md), this composes multiple services, not just one: `DzhusShelter.Api`, `DzhusShelter.UI`, `DzhusShelter.TelegramBot`, and PostgreSQL, all on the same private compose network. Check `docker-compose.yml` for exposed ports and env vars before assuming defaults — and per the architecture doc's Security section, `DzhusShelter.Api`'s port must stay internal to that network, never published to the host/internet, until auth is added.
 
 ## Target: home server (CasaOS)
 

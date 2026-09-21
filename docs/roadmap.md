@@ -84,8 +84,9 @@ Rough order — simple CRUD first to nail down Clean Architecture basics, then l
 
 | Order | Feature | Curriculum focus |
 |---|---|---|
-| 1 | Gym, Bad Habits, Schedule | Clean Architecture skeleton (Api/Infrastructure/Application/Domain), rich domain models, `Result` pattern, EF Core + PostgreSQL basics, first `Testcontainers`/`Respawn` integration tests |
-| 2 | Finance | CQRS (commands to log/sync, queries to read balances), FluentValidation, Monobank API integration behind a resilient HTTP client (Polly retry) |
+| 1 | **Bad Habits** (in progress — see [docs/architecture.md](architecture.md)) | Clean Architecture skeleton (Api/Infrastructure/Application/Domain) split into `DzhusShelter.Api`/`UI`/`TelegramBot`, rich domain models, CQRS from day one (bot writes/Blazor reads split makes it natural), FluentValidation, EF Core + PostgreSQL, Blazor-ApexCharts, first `Testcontainers` integration test. CQRS pulled forward from step 2 below — see architecture doc |
+| 1b | Gym, Schedule | Same Clean Architecture shape as Bad Habits, reusing `DzhusShelter.Api`; simpler CRUD without necessarily needing CQRS (plain service is fine unless a read/write split shows up naturally) |
+| 2 | Finance | FluentValidation, Monobank API integration behind a resilient HTTP client (Polly retry) — CQRS pattern already established by Bad Habits |
 | 3 | Exchange, Weather | Dapper for computed queries, Redis / distributed cache for rate & forecast caching, cache invalidation strategy |
 | 4 | Screen Time | First externally-callable ingest endpoint — auth, rate limiting; candidate for an Outbox + domain event once ingestion needs to trigger other work |
 | 5 | Bots | RabbitMQ/event-driven send, Outbox pattern for reliable Telegram delivery, Circuit Breaker around the Telegram API call; Bots' "message log" view is also a natural fit for SignalR live updates |
@@ -95,4 +96,4 @@ Rough order — simple CRUD first to nail down Clean Architecture basics, then l
 
 Update this as topics get exercised for real (not just discussed):
 
-- _(nothing implemented yet — mockups only, see [docs/specs/README.md](specs/README.md))_
+- **2026-09-21** — [docs/architecture.md](architecture.md) written: DzhusShelter splits into `DzhusShelter.Api` (Clean Architecture + CQRS) / `DzhusShelter.UI` / `DzhusShelter.TelegramBot`. Bad Habits ([specs/bad-habits.md](specs/bad-habits.md)) is the first feature built this way — not yet implemented, spec only.

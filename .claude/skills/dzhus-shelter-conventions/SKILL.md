@@ -5,15 +5,19 @@ description: Use when writing or reviewing any code in the DzhusShelter repo (Bl
 
 # Dzhus Shelter Conventions
 
-Dzhus Shelter is a personal Blazor Server dashboard (.NET 10, interactive server render mode). It has no auth — single user. Feature pages (Finance, Gym, Weather, etc.) are currently static mockups; real data/logic gets added incrementally, one feature at a time, each backed by a spec.
+Dzhus Shelter is a personal dashboard, no auth — single user. As of [docs/architecture.md](../../../docs/architecture.md), it's split across three projects — see that doc before assuming "Blazor does everything." Feature pages not yet rebuilt against that architecture are still static mockups in the original single-project Blazor app; real data/logic gets added incrementally, one feature at a time, each backed by a spec.
 
 ## Project layout
 
-- `Components/Pages/*.razor` — one file per route/feature (`@page "/route"`)
-- `Components/Layout/` — `MainLayout.razor`, `NavMenu.razor` (route list), `ReconnectModal.razor`
-- `Components/Shared/` — reusable components (e.g. `PixelCard.razor`)
+- `DzhusShelter.UI` (Blazor Server, .NET 10, interactive server render mode) — presentation only for features built after the architecture doc; calls `DzhusShelter.Api` over HTTP, no direct DB access
+  - `Components/Pages/*.razor` — one file per route/feature (`@page "/route"`)
+  - `Components/Layout/` — `MainLayout.razor`, `NavMenu.razor` (route list), `ReconnectModal.razor`
+  - `Components/Shared/` — reusable components (e.g. `PixelCard.razor`)
+  - `wwwroot/` — static assets, `app.css`, NES.css theme
+- `DzhusShelter.Api` — Clean Architecture (Domain/Application/Infrastructure/Api), CQRS, EF Core + PostgreSQL, one controller per feature
+- `DzhusShelter.TelegramBot` — bot worker process, calls `DzhusShelter.Api` for writes
 - `docs/specs/` — one spec per feature, written before building it (see `add-feature-page` skill)
-- `wwwroot/` — static assets, `app.css`, NES.css theme
+- `docs/architecture.md` — cross-cutting decisions (why three projects, CQRS convention, security posture) that apply to every feature built after it was written
 
 ## Page conventions
 
