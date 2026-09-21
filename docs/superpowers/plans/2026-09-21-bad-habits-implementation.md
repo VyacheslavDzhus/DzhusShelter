@@ -31,7 +31,7 @@
 **Interfaces:**
 - Produces: a running, empty ASP.NET Core Web API (`public partial class Program` for later `WebApplicationFactory<Program>` use in tests), controllers + JSON enum-as-string convention wired up, ready for feature code.
 
-- [ ] **Step 1: Create the project file**
+- [ ] **Step 1: Create the project file and add the Swagger package**
 
 Create `DzhusShelter.Api/DzhusShelter.Api.csproj`:
 
@@ -46,6 +46,8 @@ Create `DzhusShelter.Api/DzhusShelter.Api.csproj`:
 
 </Project>
 ```
+
+Run: `dotnet add DzhusShelter.Api package Swashbuckle.AspNetCore`
 
 - [ ] **Step 2: Create `Program.cs`**
 
