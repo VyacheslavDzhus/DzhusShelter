@@ -792,6 +792,15 @@ dotnet add src/DzhusShelter.Api package Microsoft.EntityFrameworkCore.Design
 dotnet tool install --global dotnet-ef || dotnet tool update --global dotnet-ef
 ```
 
+Then check which `Microsoft.EntityFrameworkCore` version `Npgsql.EntityFrameworkCore.PostgreSQL` actually pulls in:
+```bash
+dotnet list src/DzhusShelter.Api package --include-transitive
+```
+If `Microsoft.EntityFrameworkCore.Design` resolved to a *different* version than the `Microsoft.EntityFrameworkCore`/`.Relational` version Npgsql pulls (common with .NET 10 preview packages moving at different paces), pin Design down to match — otherwise a later project that references both (like the Task 7 integration test project) fails to build with `CS1705` (assembly version mismatch):
+```bash
+dotnet add src/DzhusShelter.Api package Microsoft.EntityFrameworkCore.Design --version <the version Npgsql pulls>
+```
+
 - [ ] **Step 2: Implement the DbContext and entity configuration**
 
 Create `src/DzhusShelter.Api/Infrastructure/AppDbContext.cs`:
@@ -1219,9 +1228,7 @@ namespace DzhusShelter.Api.IntegrationTests;
 
 public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
-        .WithImage("postgres:16-alpine")
-        .Build();
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
 
     public async Task InitializeAsync()
     {
@@ -1252,6 +1259,8 @@ Create `src/DzhusShelter.Api.IntegrationTests/BadHabitsEndpointsTests.cs`:
 ```csharp
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using DzhusShelter.Api.Application.BadHabits;
 using DzhusShelter.Api.Domain.BadHabits;
 using FluentAssertions;
@@ -1260,6 +1269,17 @@ namespace DzhusShelter.Api.IntegrationTests;
 
 public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
 {
+    // The API serializes camelCase property names and string enums (see DzhusShelter.Api's
+    // JsonStringEnumConverter registration + ASP.NET Core's default camelCase policy).
+    // HttpClient's default JSON options are case-sensitive and don't include that converter —
+    // without both settings here, deserialization silently produces an object with default
+    // field values instead of throwing, which is easy to misdiagnose as "no entry was saved."
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() },
+    };
+
     private readonly HttpClient _client;
 
     public BadHabitsEndpointsTests(ApiWebApplicationFactory factory)
@@ -1280,7 +1300,7 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
             $"&to={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}");
         getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var entries = await getResponse.Content.ReadFromJsonAsync<List<HabitEntryDto>>();
+        var entries = await getResponse.Content.ReadFromJsonAsync<List<HabitEntryDto>>(JsonOptions);
         entries.Should().ContainSingle(e => e.HabitType == HabitType.Alcohol && e.SubType == HabitSubType.Beer && e.Notes == "friday");
     }
 }
@@ -1940,11 +1960,14 @@ public sealed record HabitEntryDto(Guid Id, HabitType HabitType, HabitSubType Su
 
 public sealed class BadHabitsApiClient
 {
-    // The API serializes enums as strings (see src/DzhusShelter.Api's JsonStringEnumConverter
-    // registration) — HttpClient's default JSON options don't include that converter, so
-    // without it here, deserializing "Alcohol" into HabitType would throw a JsonException.
+    // The API serializes camelCase property names and string enums (see src/DzhusShelter.Api's
+    // JsonStringEnumConverter registration + ASP.NET Core's default camelCase policy).
+    // HttpClient's default JSON options are case-sensitive and don't include that converter —
+    // without both settings here, deserialization silently produces an object with default
+    // field values instead of throwing (learned this the hard way in Task 7's integration test).
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
+        PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() },
     };
 
