@@ -1403,6 +1403,11 @@ services:
     environment:
       - POSTGRES_DB=dzhusshelter
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      # Published for local dev (running the API/bot with `dotnet run` outside
+      # Docker needs to reach Postgres at localhost) — unlike the api service,
+      # nothing in docs/architecture.md restricts exposing Postgres itself.
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -1751,6 +1756,13 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DzhusShelter.TelegramBot;
 
+// DI's AddSingleton overloads require a reference type — `long` can't be registered
+// directly, so it travels through this tiny settings class instead.
+public sealed class TelegramBotSettings
+{
+    public required long AllowedChatId { get; init; }
+}
+
 public sealed class BotHostedService : BackgroundService
 {
     private readonly ITelegramBotClient _botClient;
@@ -1761,12 +1773,12 @@ public sealed class BotHostedService : BackgroundService
     public BotHostedService(
         ITelegramBotClient botClient,
         BadHabitsApiClient apiClient,
-        long allowedChatId,
+        TelegramBotSettings settings,
         ILogger<BotHostedService> logger)
     {
         _botClient = botClient;
         _apiClient = apiClient;
-        _allowedChatId = allowedChatId;
+        _allowedChatId = settings.AllowedChatId;
         _logger = logger;
     }
 
@@ -1781,7 +1793,7 @@ public sealed class BotHostedService : BackgroundService
     {
         if (update.Message is { Text: "/start" } message && message.Chat.Id == _allowedChatId)
         {
-            await SendHabitTypeMenuAsync(message.Chat.Id, cancellationToken);
+            await SendRootMenuAsync(message.Chat.Id, cancellationToken);
             return;
         }
 
@@ -1789,6 +1801,14 @@ public sealed class BotHostedService : BackgroundService
         {
             await HandleCallbackAsync(callback.Id, chatId, data, cancellationToken);
         }
+    }
+
+    private async Task SendRootMenuAsync(long chatId, CancellationToken cancellationToken)
+    {
+        var keyboard = new InlineKeyboardMarkup(
+            InlineKeyboardButton.WithCallbackData("🚫 Шкідливі звички", BadHabitsKeyboard.OpenMenuCallbackData));
+
+        await _botClient.SendMessage(chatId, "Що фіксуємо?", replyMarkup: keyboard, cancellationToken: cancellationToken);
     }
 
     private async Task SendHabitTypeMenuAsync(long chatId, CancellationToken cancellationToken)
@@ -1802,11 +1822,18 @@ public sealed class BotHostedService : BackgroundService
             },
         });
 
-        await _botClient.SendMessage(chatId, "Що фіксуємо?", replyMarkup: keyboard, cancellationToken: cancellationToken);
+        await _botClient.SendMessage(chatId, "Яка звичка?", replyMarkup: keyboard, cancellationToken: cancellationToken);
     }
 
     private async Task HandleCallbackAsync(string callbackId, long chatId, string data, CancellationToken cancellationToken)
     {
+        if (data == BadHabitsKeyboard.OpenMenuCallbackData)
+        {
+            await _botClient.AnswerCallbackQuery(callbackId, cancellationToken: cancellationToken);
+            await SendHabitTypeMenuAsync(chatId, cancellationToken);
+            return;
+        }
+
         var habitType = BadHabitsKeyboard.TryParseHabitType(data);
         if (habitType is not null)
         {
@@ -1862,12 +1889,14 @@ var apiBaseUrl = builder.Configuration["Api:BaseUrl"]
 
 builder.Services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(botToken));
 builder.Services.AddHttpClient<BadHabitsApiClient>(client => client.BaseAddress = new Uri(apiBaseUrl));
-builder.Services.AddSingleton(allowedChatId);
+builder.Services.AddSingleton(new TelegramBotSettings { AllowedChatId = allowedChatId });
 builder.Services.AddHostedService<BotHostedService>();
 
 var host = builder.Build();
 host.Run();
 ```
+
+Run: `dotnet add src/DzhusShelter.TelegramBot package Microsoft.Extensions.Http` (`AddHttpClient` isn't available from `Microsoft.Extensions.Hosting` alone — it's a separate package, bundled automatically only in `Microsoft.NET.Sdk.Web` projects, not `Sdk.Worker`).
 
 - [ ] **Step 4: Add local configuration (secrets stay out of git)**
 
@@ -1932,7 +1961,7 @@ Expected: `Build succeeded. 0 Warning(s) 0 Error(s)`. If this fails on the `Tele
 
 - [ ] **Step 7: Verify manually end-to-end**
 
-Run the API locally (`dotnet run --project src/DzhusShelter.Api`, with PostgreSQL reachable — e.g. via `docker compose up postgres`), then run the bot (`dotnet run --project src/DzhusShelter.TelegramBot`). In Telegram, message your bot `/start`, tap "🚬 Куріння", then "Cigarette".
+Run the API locally (`dotnet run --project src/DzhusShelter.Api`, with PostgreSQL reachable — e.g. via `docker compose up postgres`), then run the bot with `DOTNET_ENVIRONMENT=Development dotnet run --project src/DzhusShelter.TelegramBot`. The explicit `DOTNET_ENVIRONMENT=Development` matters: `Host.CreateApplicationBuilder` only auto-loads user secrets when the environment is Development, and it defaults to Production when unset — without it the bot silently reads the empty `BotToken` placeholder from `appsettings.json` instead of your real secret and fails with "Bot token invalid" (easy to misread as a bad token when it's actually just an unset environment). In Telegram, message your bot `/start`, tap "🚫 Шкідливі звички", tap "🚬 Куріння", then "Cigarette".
 Expected: the bot replies "Записано: Cigarette", and `GET http://localhost:5000/api/bad-habits/entries?from=...&to=...` (via Swagger UI or curl) shows the new entry.
 
 - [ ] **Step 8: Commit**
@@ -2240,6 +2269,11 @@ services:
     environment:
       - POSTGRES_DB=dzhusshelter
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      # Published for local dev (running the API/bot with `dotnet run` outside
+      # Docker needs to reach Postgres at localhost) — unlike the api service,
+      # nothing in docs/architecture.md restricts exposing Postgres itself.
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
