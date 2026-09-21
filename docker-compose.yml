@@ -24,8 +24,21 @@ services:
     depends_on:
       - postgres
     restart: unless-stopped
-    # No "ports:" mapping here on purpose — the API must stay internal to this
-    # compose network until authentication is added (see docs/architecture.md).
+    # No "ports:" mapping here on purpose — see docs/architecture.md's Security section.
+
+  bot:
+    build:
+      context: .
+      dockerfile: src/DzhusShelter.TelegramBot/Dockerfile
+    image: dzhusshelter-bot:latest
+    container_name: dzhusshelter-bot
+    environment:
+      - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}
+      - Telegram__AllowedChatId=${TELEGRAM_ALLOWED_CHAT_ID}
+      - Api__BaseUrl=http://api:8080
+    depends_on:
+      - api
+    restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
