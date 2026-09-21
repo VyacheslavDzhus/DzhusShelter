@@ -2,7 +2,9 @@
 
 Personal Blazor Server dashboard, single user, no auth. Each feature below starts as a static mockup in `Components/Pages/` and gets built out one at a time, spec first — see the `add-feature-page` skill.
 
-## Roadmap
+This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md) for the curriculum and the suggested order to build these features in.
+
+## Feature status
 
 | Feature | Route | Spec | Status |
 |---|---|---|---|
