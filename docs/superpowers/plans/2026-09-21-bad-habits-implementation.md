@@ -167,6 +167,12 @@ Add the test project to `DzhusShelter.slnx`:
 </Solution>
 ```
 
+Create `DzhusShelter.Api.Tests/GlobalUsings.cs` (`ImplicitUsings` only covers BCL namespaces, not xunit — without this every test file needs its own `using Xunit;`):
+
+```csharp
+global using Xunit;
+```
+
 - [ ] **Step 2: Write the failing domain tests**
 
 Create `DzhusShelter.Api.Tests/Domain/HabitEntryTests.cs`:
@@ -1191,6 +1197,12 @@ Add it to `DzhusShelter.slnx`:
 </Solution>
 ```
 
+Create `DzhusShelter.Api.IntegrationTests/GlobalUsings.cs`:
+
+```csharp
+global using Xunit;
+```
+
 - [ ] **Step 2: Write the test factory**
 
 Create `DzhusShelter.Api.IntegrationTests/ApiWebApplicationFactory.cs`:
@@ -1481,6 +1493,12 @@ Add both new projects to `DzhusShelter.slnx`:
   <Project Path="DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj" />
   <Project Path="DzhusShelter.TelegramBot.Tests/DzhusShelter.TelegramBot.Tests.csproj" />
 </Solution>
+```
+
+Create `DzhusShelter.TelegramBot.Tests/GlobalUsings.cs`:
+
+```csharp
+global using Xunit;
 ```
 
 - [ ] **Step 3: Write the failing keyboard tests**
