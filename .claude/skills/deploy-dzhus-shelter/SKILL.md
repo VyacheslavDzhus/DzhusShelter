@@ -23,6 +23,10 @@ docker compose up --build
 
 Check `docker-compose.yml` for the exposed port and any env vars it passes through before assuming defaults.
 
+## Target: home server (CasaOS)
+
+The real deployment target for this project is a home server running [CasaOS](https://casaos.io/). CasaOS manages Docker Compose apps through its own UI/app store on top of a normal Docker install — so the `docker-compose.yml` in this repo is what CasaOS ultimately runs, no separate CasaOS-specific compose file needed. Exact access details (host address, how compose files get onto the server, reverse proxy/domain setup) aren't documented yet — resolve them with the user before writing deployment automation, don't assume a setup.
+
 ## Before shipping a deploy
 
 - Confirm `appsettings.json` (production) doesn't contain secrets — API keys/connection strings for features like Finance or Weather must come from environment variables or a mounted secrets file, never committed values

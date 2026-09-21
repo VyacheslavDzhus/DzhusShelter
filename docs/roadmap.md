@@ -33,7 +33,7 @@ HTTP, REST API, контролери/Minimal API, pipeline, middleware, model bi
           - **Взаємодія з фронтом** — CORS, NGINX, HTTP, REST API, OpenAPI, Cookie, Headers. *Практика:* в ідеалі робимо просте фронтенд-застосунок і з'єднуємо його з бекендом.
 
 ### 3. Docker
-Контейнери, Docker Compose. *Практика:* запускаємо Postgres/Redis/інші сервіси в докері, піднімаємо своє Web API в докері, завжди `docker-compose up -d`.
+Контейнери, Docker Compose. *Практика:* запускаємо Postgres/Redis/інші сервіси в докері, піднімаємо своє Web API в докері, завжди `docker-compose up -d`. Реальна ціль для деплою — домашній сервер на CasaOS (див. `deploy-dzhus-shelter` скіл), тож `docker-compose.yml` цього репо — не навчальна вправа, а те, що реально піде в продакшн.
 
 - **Kubernetes** — позначено як наступний крок після Docker, без деталізації в мапі (посилання: [roadmap.sh/kubernetes](https://roadmap.sh/kubernetes)).
 
