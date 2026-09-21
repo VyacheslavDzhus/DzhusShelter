@@ -2090,10 +2090,11 @@ Modify `src/DzhusShelter.UI/appsettings.Development.json` — add:
 
 - [ ] **Step 5: Rewrite `BadHabits.razor`**
 
-Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its contents:
+Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its contents. Note the `@rendermode InteractiveServer` directive: none of this repo's other pages set a render mode, and `Program.cs`'s `AddInteractiveServerRenderMode()` only makes server interactivity *available*, it doesn't turn it on by default per page. Without this directive the page still compiles and does an initial static render (so a first look can be misleading — the filters and chart container appear in the HTML), but `@bind:after` never fires and the ApexChart component never gets a live circuit to run its JS interop in, so the chart div stays permanently empty with no error anywhere:
 
 ```razor
 @page "/bad-habits"
+@rendermode InteractiveServer
 @using ApexCharts
 @using DzhusShelter.UI.Services
 @inject BadHabitsApiClient ApiClient
@@ -2134,7 +2135,11 @@ Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its co
     }
     else
     {
-        <ApexChart TItem="DailyCount" Title="Кількість подій за днями">
+        @* @key forces Blazor to tear down and recreate the chart whenever the underlying data
+           changes — ApexChart doesn't otherwise pick up a new Items collection reference on its
+           own after the first render (confirmed by hand: changing filters updated the API call
+           but left the chart showing stale data until this was added). *@
+        <ApexChart @key="_renderKey" TItem="DailyCount" Title="Кількість подій за днями">
             <ApexPointSeries TItem="DailyCount"
                              Items="_dailyCounts"
                              Name="Записи"
@@ -2151,6 +2156,7 @@ Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its co
     private string _selectedHabitType = "";
     private List<HabitEntryDto>? _entries;
     private List<DailyCount> _dailyCounts = [];
+    private int _renderKey;
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -2158,9 +2164,15 @@ Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its co
     {
         HabitType? habitType = Enum.TryParse<HabitType>(_selectedHabitType, out var parsed) ? parsed : null;
 
+        // DateTime.Today/@bind on <input type="date"> both produce DateTimeKind.Local values —
+        // pairing a Local-kind DateTime with an explicit TimeSpan.Zero offset throws unless the
+        // machine's local offset actually is zero. Treat the date as offset-agnostic instead.
+        var from = DateTime.SpecifyKind(_fromDate, DateTimeKind.Unspecified);
+        var to = DateTime.SpecifyKind(_toDate.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified);
+
         _entries = await ApiClient.GetEntriesAsync(
-            new DateTimeOffset(_fromDate, TimeSpan.Zero),
-            new DateTimeOffset(_toDate.AddDays(1).AddTicks(-1), TimeSpan.Zero),
+            new DateTimeOffset(from, TimeSpan.Zero),
+            new DateTimeOffset(to, TimeSpan.Zero),
             habitType,
             null,
             CancellationToken.None);
@@ -2170,6 +2182,7 @@ Modify `src/DzhusShelter.UI/Components/Pages/BadHabits.razor` — replace its co
             .Select(g => new DailyCount(g.Key, g.Count()))
             .OrderBy(d => d.Date)
             .ToList();
+        _renderKey++;
     }
 
     private sealed record DailyCount(DateTime Date, int Count);

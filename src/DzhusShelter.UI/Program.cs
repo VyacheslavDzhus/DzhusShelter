@@ -1,10 +1,17 @@
+using ApexCharts;
 using DzhusShelter.UI.Components;
+using DzhusShelter.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient<BadHabitsApiClient>(client =>
+    client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"]
+        ?? throw new InvalidOperationException("Api:BaseUrl is not configured.")));
+builder.Services.AddApexCharts();
 
 var app = builder.Build();
 
