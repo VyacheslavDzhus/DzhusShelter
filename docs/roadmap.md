@@ -1,35 +1,75 @@
 # Learning Roadmap — Senior .NET Developer & AI-Engineer (2026)
 
-Source: `.Net Senior Goal` plan. This project is the practice vehicle for the curriculum below — every feature in [docs/specs/](specs/README.md) is a chance to apply one or more of these topics for real, not just read about them.
+Sources: the `.Net Senior Goal` text plan, and a more detailed [Excalidraw mind map](https://excalidraw.com/#json=faPgapt7mXak8IgsgWeIm,IjNp0-WmmIQ8QVWld0-7yQ) that lays the same curriculum out as an ordered path with concrete libraries and "how we practice it" notes per topic. This project is the practice vehicle — every feature in [docs/specs/](specs/README.md) is a chance to apply a topic for real, not just read about it.
 
-## Curriculum
+## Curriculum path
 
-### 1. Architecture & Design
-- Clean Architecture & DDD: rich domain models (not anemic), bounded contexts, aggregates
-- Patterns: CQRS, repository, `Result` pattern instead of exceptions for business-rule failures
-- ASP.NET Core pipeline: custom middleware (e.g. exception-handling middleware), filters
-- Validation: `FluentValidation` combined with DDD; custom validation factories and extension methods that collect errors via a validation context
+This is the order the mind map lays topics out in — each topic has (a) what it covers and (b) how it's practiced, straight from the source diagram.
 
-### 2. Engineering Practices & Databases
-- Transaction management: Transaction Manager, Outbox pattern, domain event dispatching
-- Databases: PostgreSQL as primary relational store; EF Core (query optimization, migrations, Fluent API) and Dapper for complex SQL
-- Caching: Redis as distributed cache, .NET 9+ `HybridCache`, cache invalidation
-- Testing: integration tests with `Testcontainers` (Postgres/Redis/RabbitMQ in Docker) and `Respawn` for DB reset between tests
+### 1. C#
+Класи, колекції, ООП, значимі/посилкові типи, робота зі строками та файлами, делегати, винятки, узагальнення (generics), `record`, багатопотоковість, асинхронність.
+*Практика:* консольні застосунки, задачки, постійна практика, писати код.
 
-### 3. Microservices & Async Communication
-- Message brokers: RabbitMQ, Kafka; event-driven architecture
-- Microservice patterns: API Gateway, BFF, Circuit Breaker, Retry, Rate Limiting, Saga
-- File handling: S3-compatible storage (MinIO), multipart uploads, presigned URLs
+**База (інструменти/основи), паралельно з C#:** Git, GitHub, робота з консоллю, NuGet, дебаг, пошук/AI-асистенти, структури даних, прості алгоритми.
+*Практика:* розвиваємо кругозір — гуглимо, вивчаємо, практикуємось.
 
-### 4. Infrastructure, Cloud & Observability
-- Containers/orchestration: Docker, Docker Compose, intro to Kubernetes, .NET Aspire for orchestration/service discovery
-- Observability: OpenTelemetry (metrics/logs/traces), Prometheus, Tempo, Grafana, ElasticSearch
-- CI/CD: GitLab CI or GitHub Actions — build, test, deploy pipelines
+### 2. ASP.NET Core Web API
+HTTP, REST API, контролери/Minimal API, pipeline, middleware, model binding, Dependency Injection, Swagger, Postman, DTO/Requests/Responses.
+*Практика:* створюємо ASP.NET Core Web API проєкти, пишемо HTTP-методи по REST, використовуємо Swagger/Postman.
 
-### 5. AI-Assisted Development
-- Spec-Driven Development with agents (this repo's `docs/specs/` + skills workflow already practices this)
-- Building custom MCP servers in C# to give an agent access to local systems/DB/platform
-- Agent-driven workflows against an issue tracker: agent creates branches/worktrees, writes code, commits, opens MRs
+Паралельні гілки, що ростуть з Web API:
+
+- **Чиста архітектура** — Api/Infrastructure/Application/Domain шари, сервіси/хендлери, репозиторії, DI, інверсія залежностей, патерни (Декоратор, Фабрика, Репозиторій, Будівельник). *Практика:* вивчаємо чужі архітектурні рішення, дивимось інші репозиторії, просимо рев'ю, не шукаємо ідеальну архітектуру.
+  - **Проєктування** — доменні області й моделі, модульність/модульна архітектура, Anemic vs Rich models, `Result` pattern. *Практика:* rich models для домену, anemic models для DTO, все валідуємо.
+    - **Валідація** — `FluentValidation`, валідація вхідних параметрів, валідація в rich models, бізнес-валідація. *Практика:* валідуємо обов'язково все.
+
+- **База даних (PostgreSQL)** — CRUD, робота з таблицями та міграції, зв'язки між таблицями, індекси, ACID, транзакції, EF Core (DbContext, ChangeTracker, LINQ), Dapper (SQL-запити), блокування, фільтри/пагінація/складні запити/join'и. *Практика:* підключаємо БД до застосунку, реалізуємо CRUD і бізнес-логіку, стежимо за індексами/транзакціями/зв'язками, постійно проєктуємо нові предметні області.
+  - **CQRS** — Command pattern, CQS, Read/Write models, окремі Read/Write `DbContext`, `ICommandHandler`/`IQueryHandler`, патерн декоратор. *Практика:* поділ на команди (бізнес-логіка) і запити (читання даних), різні моделі для Read і Write.
+    - **Кешування** — Memory cache, Distributed cache, Redis, стратегії кешування, інвалідація кеша. *Практика:* впроваджуємо кешування для сервісів, різні стратегії, реалізуємо інвалідацію.
+      - **ElasticSearch** — повнотекстовий пошук, логування через Elastic stack. *Практика:* повнотекстовий пошук у проєкті, логи через Elastic Stack.
+        - **MongoDB** → **ClickHouse** — альтернативні/додаткові сховища даних (документна БД, колонкова БД для аналітики) — згадані як окремі теми для вивчення, без деталізації в мапі.
+      - **Логування** — Serilog, Seq, Elastic, рівні логування, конфігурація логування. *Практика:* впроваджуємо логування в проєкт, логи всюди.
+        - **Auth** — автентифікація, авторизація, сесії і токени, JWT, ролі/дозволи/повноваження (RBAC, ABAC), `asp net core Identity`, OAuth, OpenIdConnect, SSO, Identity Provider, Keycloak, автентифікація/авторизація з боку клієнта. *Практика:* спочатку самописна автентифікація/авторизація в проєкті, потім тренуємось з Keycloak.
+          - **Взаємодія з фронтом** — CORS, NGINX, HTTP, REST API, OpenAPI, Cookie, Headers. *Практика:* в ідеалі робимо просте фронтенд-застосунок і з'єднуємо його з бекендом.
+
+### 3. Docker
+Контейнери, Docker Compose. *Практика:* запускаємо Postgres/Redis/інші сервіси в докері, піднімаємо своє Web API в докері, завжди `docker-compose up -d`.
+
+- **Kubernetes** — позначено як наступний крок після Docker, без деталізації в мапі (посилання: [roadmap.sh/kubernetes](https://roadmap.sh/kubernetes)).
+
+### 4. Тестування
+Юніт-тести, інтеграційні тести, end-to-end тести, xUnit, Moq/NSubstitute, Testcontainers, Respawn, AutoFixture, FluentAssertions. *Практика:* обов'язково пишемо тести для бізнес-логіки, інтеграційні тести перевіряють роботу застосунку та зовнішніх систем.
+
+### 5. Фонові процеси
+`Host`, `IHostedService`, `BackgroundService`, Channels, Quartz, Hangfire. *Практика:* придумуємо функціонал, який виконується періодично у фоні.
+
+- **WebSockets/SignalR** — передача даних у реальному часі (сповіщення), live-оновлення (черги, графіки, статуси), онлайн-чат.
+
+### 6. Робота з файлами
+S3, Amazon S3 Client, MinIO, presigned-посилання, multipart-завантаження, валідація файлів. *Практика:* додаємо файли в проєкт (аватарки, скріншоти, відео), все зберігаємо в S3.
+
+- **Обробка файлів** — FFmpeg для відеообробки, робота з PDF (QuestPDF, PdfSharp), робота з Excel (EPPlus, ClosedXML), ZIP/RAR, робота з файлами великого розміру (Stream). *Практика:* звіти, аудити, генерація файлів.
+
+### 7. Брокери повідомлень
+RabbitMQ, Kafka, подійно-орієнтована архітектура, інтеграційні події, Pub/Sub, Producers/Consumers, Outbox патерн, Dead letter queue. *Практика:* пишемо другий сервіс, що слухає черги/топіки, куди перший сервіс надсилає повідомлення.
+
+- **Мікросервіси** — брокери повідомлень, контейнеризація, синхронна/асинхронна взаємодія, HTTP/gRPC-комунікація, Vertical Slice Design. *Практика:* розбиваємо моноліт на частини (або одразу проєктуємо модульний застосунок і ділимо на модулі), продумуємо взаємодію сервісів, вивчаємо популярні патерни мікросервісної архітектури.
+  - **Патерни в мікросервісах і архітектурі** — DDD, API Gateway, BFF (Backend for Frontend), Circuit Breaker, Retry, Rate Limiting, Database per Service, Saga, Event Sourcing, розподілений трейсинг/логування, автентифікація в мікросервісах, Keycloak. *Практика:* вивчаємо ці патерни, акуратно й поступово впроваджуємо їх у мікросервісах.
+
+### 8. DDD (окрема поглиблена гілка)
+Предметна область (Domain), Bounded Context, Entity, Value Objects, Aggregate, доменні події. *Практика:* проєктуємо і розробляємо сервіс за допомогою DDD.
+
+### 9. Моніторинг
+Observability, логування, трейсинг, метрики: Elastic, Grafana, Kibana, Prometheus, OpenTelemetry, Jaeger. *Практика:* впроваджуємо моніторинг у всі сервіси, все піднімаємо в докері.
+
+### 10. Frontend / React (stretch, поза основним фокусом)
+Позначено лише посиланнями без деталізації: [roadmap.sh/frontend](https://roadmap.sh/frontend), [roadmap.sh/react](https://roadmap.sh/react).
+
+### 11. AI-Assisted Development
+З текстового плану (ще не додано до mind map):
+- Spec-Driven Development з агентами — цей репо вже практикує це через `docs/specs/` + скіли
+- Створення власних MCP-серверів на C#, щоб надати агенту доступ до локальних систем/БД/платформи
+- Агентні воркфлоу проти issue-трекера: агент сам створює гілки/worktree, пише код, комітить, відкриває MR
 
 ## How Claude works with you on this
 
@@ -44,12 +84,12 @@ Rough order — simple CRUD first to nail down Clean Architecture basics, then l
 
 | Order | Feature | Curriculum focus |
 |---|---|---|
-| 1 | Gym, Bad Habits, Schedule | Clean Architecture skeleton, rich domain models, `Result` pattern, EF Core + PostgreSQL basics, first `Testcontainers` integration tests |
+| 1 | Gym, Bad Habits, Schedule | Clean Architecture skeleton (Api/Infrastructure/Application/Domain), rich domain models, `Result` pattern, EF Core + PostgreSQL basics, first `Testcontainers`/`Respawn` integration tests |
 | 2 | Finance | CQRS (commands to log/sync, queries to read balances), FluentValidation, Monobank API integration behind a resilient HTTP client (Polly retry) |
-| 3 | Exchange, Weather | Dapper for computed queries, Redis / `HybridCache` for rate & forecast caching, cache invalidation |
+| 3 | Exchange, Weather | Dapper for computed queries, Redis / distributed cache for rate & forecast caching, cache invalidation strategy |
 | 4 | Screen Time | First externally-callable ingest endpoint — auth, rate limiting; candidate for an Outbox + domain event once ingestion needs to trigger other work |
-| 5 | Bots | RabbitMQ/event-driven send, Outbox pattern for reliable Telegram delivery, Circuit Breaker around the Telegram API call |
-| 6 (stretch) | Cross-cutting | OpenTelemetry + Grafana/Prometheus across all features, CI/CD pipeline, first custom MCP server exposing this app's data to an agent |
+| 5 | Bots | RabbitMQ/event-driven send, Outbox pattern for reliable Telegram delivery, Circuit Breaker around the Telegram API call; Bots' "message log" view is also a natural fit for SignalR live updates |
+| 6 (stretch) | Cross-cutting | Serilog + Elastic/Grafana/Prometheus/OpenTelemetry across all features, Auth (JWT → Keycloak), CI/CD pipeline, first custom MCP server exposing this app's data to an agent |
 
 ## Progress log
 
