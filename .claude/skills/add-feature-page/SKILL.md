@@ -15,7 +15,7 @@ Turns a spec at `docs/specs/<feature>.md` into a real implementation, replacing 
 4. **Infrastructure** — EF Core entity configuration + migration for PostgreSQL (or the persistence the spec names, if different).
 5. **API** — add the controller/endpoints from the spec's API section to `DzhusShelter.Api`, dispatching to the command/query handlers.
 6. **Wire secrets/config** — API keys or connection strings go in `appsettings.Development.json` (local) and are documented as required env vars in the spec; never hardcode them.
-7. **Client(s)** — update `Components/Pages/<Feature>.razor` in `DzhusShelter.UI` to call the API via `HttpClient` instead of hardcoded values (keep the existing PixelCard/nes-container layout unless the spec's UI section says otherwise), and/or add the bot flow to `DzhusShelter.TelegramBot` if the spec describes one.
+7. **Client(s)** — update `src/DzhusShelter.UI/Components/Pages/<Feature>.razor` to call the API via `HttpClient` instead of hardcoded values (keep the existing PixelCard/nes-container layout unless the spec's UI section says otherwise), and/or add the bot flow to `src/DzhusShelter.TelegramBot` if the spec describes one.
 8. **Update the spec status** — change the spec's status line (Spec'd → Implemented) once it reflects real data end-to-end.
 9. **Update `docs/specs/README.md`** — flip that feature's status in the status table.
 

@@ -8,7 +8,7 @@ description: Use when building, running, or deploying the DzhusShelter app via D
 ## Local run (no Docker)
 
 ```bash
-dotnet run --project DzhusShelter.UI.csproj
+dotnet run --project src/DzhusShelter.UI/DzhusShelter.UI.csproj
 ```
 
 Uses `appsettings.Development.json`. Blazor Server with interactive server render mode — no separate frontend build step.
@@ -31,4 +31,4 @@ The real deployment target for this project is a home server running [CasaOS](ht
 
 - Confirm `appsettings.json` (production) doesn't contain secrets — API keys/connection strings for features like Finance or Weather must come from environment variables or a mounted secrets file, never committed values
 - If a feature spec introduces a new database (PostgreSQL/MongoDB), add its connection service to `docker-compose.yml` and document the required env var in that feature's spec
-- `app.UseHsts()` and `app.UseExceptionHandler` only run when `!Environment.IsDevelopment()` (see [Program.cs](../../../Program.cs)) — verify `ASPNETCORE_ENVIRONMENT` is set correctly for the target environment
+- `app.UseHsts()` and `app.UseExceptionHandler` only run when `!Environment.IsDevelopment()` (see [Program.cs](../../../src/DzhusShelter.UI/Program.cs)) — verify `ASPNETCORE_ENVIRONMENT` is set correctly for the target environment
