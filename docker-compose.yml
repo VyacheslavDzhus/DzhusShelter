@@ -1,9 +1,6 @@
 services:
   personal-site:
-    build:
-      context: .
-      dockerfile: src/DzhusShelter.UI/Dockerfile
-    image: personal-site:latest
+    image: 1928374650810/dzhusshelter-ui:latest
     container_name: personal-site
     ports:
       - "8080:8080"
@@ -14,10 +11,7 @@ services:
     restart: unless-stopped
 
   api:
-    build:
-      context: .
-      dockerfile: src/DzhusShelter.Api/Dockerfile
-    image: dzhusshelter-api:latest
+    image: 1928374650810/dzhusshelter-api:latest
     container_name: dzhusshelter-api
     environment:
       - ConnectionStrings__Postgres=Host=postgres;Port=5432;Database=dzhusshelter;Username=postgres;Password=${POSTGRES_PASSWORD}
@@ -27,10 +21,7 @@ services:
     # No "ports:" mapping here on purpose — see docs/architecture.md's Security section.
 
   bot:
-    build:
-      context: .
-      dockerfile: src/DzhusShelter.TelegramBot/Dockerfile
-    image: dzhusshelter-bot:latest
+    image: 1928374650810/dzhusshelter-bot:latest
     container_name: dzhusshelter-bot
     environment:
       - Telegram__BotToken=${TELEGRAM_BOT_TOKEN}

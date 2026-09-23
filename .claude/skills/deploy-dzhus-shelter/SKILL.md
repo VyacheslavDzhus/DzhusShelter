@@ -15,7 +15,7 @@ Uses `appsettings.Development.json`. Blazor Server with interactive server rende
 
 ## Docker
 
-Build and run via [docker-compose.yml](../../../docker-compose.yml):
+`docker-compose.yml` is the deployment file — its `image:` entries point at prebuilt images on Docker Hub (`1928374650810/dzhusshelter-*:latest`), not local builds. `docker-compose.override.yml` sits next to it and adds `build:` back for local dev only — Compose auto-merges both files when neither is named explicitly, so local dev is unchanged:
 
 ```bash
 docker compose up --build
@@ -23,9 +23,19 @@ docker compose up --build
 
 As of [docs/architecture.md](../../../docs/architecture.md), this composes multiple services, not just one: `DzhusShelter.Api`, `DzhusShelter.UI`, `DzhusShelter.TelegramBot`, and PostgreSQL, all on the same private compose network. Check `docker-compose.yml` for exposed ports and env vars before assuming defaults — and per the architecture doc's Security section, `DzhusShelter.Api`'s port must stay internal to that network, never published to the host/internet, until auth is added.
 
+## CI: build and push images
+
+[.github/workflows/docker-build-push.yml](../../../.github/workflows/docker-build-push.yml) builds the 3 app images (api/ui/bot) and pushes them to Docker Hub as `1928374650810/dzhusshelter-{api,ui,bot}:latest` on every push to `main`. Requires a repo secret `DOCKERHUB_TOKEN` (a Docker Hub Access Token, not the account password). This is why `docker-compose.yml`'s `image:` tags can point straight at Docker Hub — a fresh `latest` is there right after a merge to `main`.
+
 ## Target: home server (CasaOS)
 
-The real deployment target for this project is a home server running [CasaOS](https://casaos.io/). CasaOS manages Docker Compose apps through its own UI/app store on top of a normal Docker install — so the `docker-compose.yml` in this repo is what CasaOS ultimately runs, no separate CasaOS-specific compose file needed. Exact access details (host address, how compose files get onto the server, reverse proxy/domain setup) aren't documented yet — resolve them with the user before writing deployment automation, don't assume a setup.
+The real deployment target for this project is a home server running [CasaOS](https://casaos.io/). CasaOS manages Docker Compose apps through its own UI/app store on top of a normal Docker install. It only ever sees `docker-compose.yml` (never the `.override.yml`, which is dev-only) — so on CasaOS, updating means:
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+No build happens on the CasaOS box itself — the point of the CI pipeline above is that this weak hardware never has to compile or build a Docker image, only pull finished ones. Exact access details (host address, how compose files get onto the server, reverse proxy/domain setup) aren't documented yet — resolve them with the user before writing deployment automation, don't assume a setup.
 
 ## Before shipping a deploy
 

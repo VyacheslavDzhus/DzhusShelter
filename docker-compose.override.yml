@@ -1,0 +1,15 @@
+services:
+  personal-site:
+    build:
+      context: .
+      dockerfile: src/DzhusShelter.UI/Dockerfile
+
+  api:
+    build:
+      context: .
+      dockerfile: src/DzhusShelter.Api/Dockerfile
+
+  bot:
+    build:
+      context: .
+      dockerfile: src/DzhusShelter.TelegramBot/Dockerfile
