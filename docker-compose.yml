@@ -3,7 +3,9 @@ services:
     image: 1928374650810/dzhusshelter-ui:latest
     container_name: personal-site
     ports:
-      - "8080:8080"
+      # 8080 is already taken on the CasaOS host by another container
+      # (zigbee2mqtt) — 8082 is free there; container-internal port stays 8080.
+      - "8082:8080"
     environment:
       - Api__BaseUrl=http://api:8080
     depends_on:
