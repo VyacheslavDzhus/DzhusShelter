@@ -35,7 +35,9 @@ The real deployment target for this project is a home server running [CasaOS](ht
 docker compose pull && docker compose up -d
 ```
 
-No build happens on the CasaOS box itself — the point of the CI pipeline above is that this weak hardware never has to compile or build a Docker image, only pull finished ones. Exact access details (host address, how compose files get onto the server, reverse proxy/domain setup) aren't documented yet — resolve them with the user before writing deployment automation, don't assume a setup.
+No build happens on the CasaOS box itself — the point of the CI pipeline above is that this weak hardware never has to compile or build a Docker image, only pull finished ones.
+
+Deployed and running since 2026-09-23 — full step-by-step commands, port assignments, `.env` format, backup commands, and known gotchas (including a CasaOS GUI bug that silently corrupts `docker-compose.yml`) live in [docs/casaos-runbook.md](../../../docs/casaos-runbook.md). Read that before making any deployment change on the actual server.
 
 ## Before shipping a deploy
 
