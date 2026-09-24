@@ -38,4 +38,25 @@ public class HabitEntryTests
         result.IsFailure.Should().BeTrue();
         result.Error.Code.Should().Be("HabitEntry.SubTypeMismatch");
     }
+
+    [Theory]
+    [InlineData(HabitType.Smoking, HabitSubType.Cigarette)]
+    [InlineData(HabitType.Smoking, HabitSubType.Vape)]
+    [InlineData(HabitType.Smoking, HabitSubType.Iqos)]
+    [InlineData(HabitType.Smoking, HabitSubType.Hookah)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Beer)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Wine)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Vodka)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Whiskey)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Rum)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Gin)]
+    [InlineData(HabitType.Alcohol, HabitSubType.Martini)]
+    public void Create_WithEachValidHabitTypeSubTypePair_Succeeds(HabitType habitType, HabitSubType subType)
+    {
+        var result = HabitEntry.Create(habitType, subType, Now.AddMinutes(-5), null, CreateTimeProvider());
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.HabitType.Should().Be(habitType);
+        result.Value.SubType.Should().Be(subType);
+    }
 }

@@ -6,8 +6,8 @@ public sealed class HabitEntry
 {
     private static readonly Dictionary<HabitType, HabitSubType[]> ValidSubTypes = new()
     {
-        [HabitType.Smoking] = [HabitSubType.Cigarette, HabitSubType.Vape],
-        [HabitType.Alcohol] = [HabitSubType.Beer, HabitSubType.Wine, HabitSubType.Spirits],
+        [HabitType.Smoking] = [HabitSubType.Cigarette, HabitSubType.Vape, HabitSubType.Iqos, HabitSubType.Hookah],
+        [HabitType.Alcohol] = [HabitSubType.Beer, HabitSubType.Wine, HabitSubType.Vodka, HabitSubType.Whiskey, HabitSubType.Rum, HabitSubType.Gin, HabitSubType.Martini],
     };
 
     private HabitEntry()
