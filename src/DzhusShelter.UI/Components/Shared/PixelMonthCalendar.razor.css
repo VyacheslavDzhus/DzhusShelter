@@ -41,19 +41,3 @@
     font-size: 9px;
     line-height: 1;
 }
-
-.pixel-calendar-marker {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.pixel-calendar-plus {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    font-size: 8px;
-    color: #ffcc00;
-    text-shadow: 1px 1px 0px #000;
-}

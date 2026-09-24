@@ -60,3 +60,20 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* PixelMonthCalendar marker styles (injected as raw MarkupString, not scoped) */
+.pixel-calendar-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pixel-calendar-plus {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 8px;
+    color: #ffcc00;
+    text-shadow: 1px 1px 0px #000;
+}
