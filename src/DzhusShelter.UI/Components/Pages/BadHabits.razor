@@ -6,5 +6,21 @@
 
 <h1>Bad Habits</h1>
 
-<PixelHabitCard HabitType="HabitType.Alcohol" Title="Алкоголь" />
-<PixelHabitCard HabitType="HabitType.Smoking" Title="Куріння" />
+<div class="bad-habits-grid">
+    <ErrorBoundary>
+        <ChildContent>
+            <PixelHabitCard HabitType="HabitType.Alcohol" Title="Алкоголь" />
+        </ChildContent>
+        <ErrorContent>
+            <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+        </ErrorContent>
+    </ErrorBoundary>
+    <ErrorBoundary>
+        <ChildContent>
+            <PixelHabitCard HabitType="HabitType.Smoking" Title="Куріння" />
+        </ChildContent>
+        <ErrorContent>
+            <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+        </ErrorContent>
+    </ErrorBoundary>
+</div>

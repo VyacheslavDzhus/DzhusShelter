@@ -1,7 +1,7 @@
 @using DzhusShelter.UI.Services
 @inject BadHabitsApiClient ApiClient
 
-<PixelCard Title="@Title" Class="pixel-habit-card">
+<PixelCard Title="@Title">
     <div class="pixel-habit-card-filter">
         <label>
             Підтип:
@@ -95,6 +95,7 @@
     private DateTime _customFrom = DateTime.UtcNow.Date.AddMonths(-1);
     private DateTime _customTo = DateTime.UtcNow.Date;
     private List<(HabitSubType SubType, int Count)> _stats = [];
+    private int _loadVersion;
 
     private HabitSubType? SelectedSubType =>
         Enum.TryParse<HabitSubType>(_selectedSubTypeRaw, out var parsed) ? parsed : null;
@@ -125,6 +126,8 @@
 
     private async Task ReloadAsync()
     {
+        var version = ++_loadVersion;
+
         var monthStart = new DateTimeOffset(new DateTime(_viewYear, _viewMonth, 1), TimeSpan.Zero);
         var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
         var (statsFrom, statsTo) = GetStatsRange();
@@ -132,7 +135,13 @@
         var rangeFrom = monthStart < statsFrom ? monthStart : statsFrom;
         var rangeTo = monthEnd > statsTo ? monthEnd : statsTo;
 
-        _entries = await ApiClient.GetEntriesAsync(rangeFrom, rangeTo, HabitType, SelectedSubType, CancellationToken.None);
+        var entries = await ApiClient.GetEntriesAsync(rangeFrom, rangeTo, HabitType, SelectedSubType, CancellationToken.None);
+        if (version != _loadVersion)
+        {
+            return;
+        }
+
+        _entries = entries;
         _markedDays = BuildMarkedDays(_entries.Where(e => e.OccurredAt >= monthStart && e.OccurredAt <= monthEnd));
         _stats = ComputeStats(_entries, statsFrom, statsTo);
     }
@@ -158,6 +167,7 @@
             .GroupBy(e => e.SubType)
             .Select(g => (SubType: g.Key, Count: g.Count()))
             .OrderByDescending(s => s.Count)
+            .ThenBy(s => s.SubType)
             .ToList();
 
     private static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
