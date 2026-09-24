@@ -16,27 +16,45 @@ public class BadHabitsControllerTests
     private static readonly DateTimeOffset Now = new(2026, 1, 15, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task LogEntry_WhenHandlerSucceeds_ReturnsCreated()
+    public async Task LogEntry_WhenNewlyLogged_ReturnsOkWithAlreadyLoggedFalse()
     {
-        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<Guid>>>();
+        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>>();
         var entryId = Guid.NewGuid();
         commandHandler.Handle(Arg.Any<LogHabitEntryCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success(entryId));
+            .Returns(Result.Success(new LogHabitEntryResult(entryId, AlreadyLogged: false)));
         var queryHandler = Substitute.For<IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>>();
         var controller = new BadHabitsController(commandHandler, queryHandler);
 
         var response = await controller.LogEntry(
             new LogHabitEntryCommand(HabitType.Smoking, HabitSubType.Cigarette, Now, null), CancellationToken.None);
 
-        response.Should().BeOfType<CreatedResult>();
+        var okResult = response.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(new { id = entryId, alreadyLogged = false });
+    }
+
+    [Fact]
+    public async Task LogEntry_WhenAlreadyLoggedToday_ReturnsOkWithAlreadyLoggedTrue()
+    {
+        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>>();
+        var existingId = Guid.NewGuid();
+        commandHandler.Handle(Arg.Any<LogHabitEntryCommand>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success(new LogHabitEntryResult(existingId, AlreadyLogged: true)));
+        var queryHandler = Substitute.For<IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>>();
+        var controller = new BadHabitsController(commandHandler, queryHandler);
+
+        var response = await controller.LogEntry(
+            new LogHabitEntryCommand(HabitType.Smoking, HabitSubType.Cigarette, Now, null), CancellationToken.None);
+
+        var okResult = response.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().BeEquivalentTo(new { id = existingId, alreadyLogged = true });
     }
 
     [Fact]
     public async Task LogEntry_WhenHandlerFails_ReturnsBadRequest()
     {
-        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<Guid>>>();
+        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>>();
         commandHandler.Handle(Arg.Any<LogHabitEntryCommand>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<Guid>(new Error("BadHabits.Validation", "bad input")));
+            .Returns(Result.Failure<LogHabitEntryResult>(new Error("BadHabits.Validation", "bad input")));
         var queryHandler = Substitute.For<IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>>();
         var controller = new BadHabitsController(commandHandler, queryHandler);
 
@@ -49,7 +67,7 @@ public class BadHabitsControllerTests
     [Fact]
     public async Task GetEntries_WhenHandlerSucceeds_ReturnsOkWithEntries()
     {
-        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<Guid>>>();
+        var commandHandler = Substitute.For<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>>();
         var queryHandler = Substitute.For<IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>>();
         var dtos = new List<HabitEntryDto>
         {
