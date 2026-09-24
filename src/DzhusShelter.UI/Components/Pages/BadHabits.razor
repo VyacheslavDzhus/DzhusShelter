@@ -1,74 +1,10 @@
 @page "/bad-habits"
 @rendermode InteractiveServer
 @using DzhusShelter.UI.Services
-@inject BadHabitsApiClient ApiClient
 
 <PageTitle>Bad Habits</PageTitle>
 
 <h1>Bad Habits</h1>
 
-<div class="nes-container with-title is-dark" style="margin-top: 1rem;">
-    <p class="title">Фільтри</p>
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <label>
-            Від: <input type="date" class="nes-input" @bind="_fromDate" @bind:after="ReloadAsync" />
-        </label>
-        <label>
-            До: <input type="date" class="nes-input" @bind="_toDate" @bind:after="ReloadAsync" />
-        </label>
-        <label>
-            Тип:
-            <select class="nes-select" @bind="_selectedHabitType" @bind:after="ReloadAsync">
-                <option value="">Всі</option>
-                <option value="@HabitType.Smoking">Куріння</option>
-                <option value="@HabitType.Alcohol">Алкоголь</option>
-            </select>
-        </label>
-    </div>
-</div>
-
-@if (_entries is null)
-{
-    <p><em>Завантаження...</em></p>
-}
-else
-{
-    <PixelChart Title="Кількість подій за днями"
-                Data="_chartData"
-                SeriesName="Записи"
-                EmptyMessage="Немає записів за обраний період." />
-}
-
-@code {
-    private DateTime _fromDate = DateTime.Today.AddDays(-30);
-    private DateTime _toDate = DateTime.Today;
-    private string _selectedHabitType = "";
-    private List<HabitEntryDto>? _entries;
-    private List<ChartDataPoint> _chartData = [];
-
-    protected override async Task OnInitializedAsync() => await ReloadAsync();
-
-    private async Task ReloadAsync()
-    {
-        HabitType? habitType = Enum.TryParse<HabitType>(_selectedHabitType, out var parsed) ? parsed : null;
-
-        // DateTime.Today/@bind on <input type="date"> both produce DateTimeKind.Local values —
-        // pairing a Local-kind DateTime with an explicit TimeSpan.Zero offset throws unless the
-        // machine's local offset actually is zero. Treat the date as offset-agnostic instead.
-        var from = DateTime.SpecifyKind(_fromDate, DateTimeKind.Unspecified);
-        var to = DateTime.SpecifyKind(_toDate.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified);
-
-        _entries = await ApiClient.GetEntriesAsync(
-            new DateTimeOffset(from, TimeSpan.Zero),
-            new DateTimeOffset(to, TimeSpan.Zero),
-            habitType,
-            null,
-            CancellationToken.None);
-
-        _chartData = _entries
-            .GroupBy(e => e.OccurredAt.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new ChartDataPoint(g.Key.ToString("dd.MM"), g.Count()))
-            .ToList();
-    }
-}
+<PixelHabitCard HabitType="HabitType.Alcohol" Title="Алкоголь" />
+<PixelHabitCard HabitType="HabitType.Smoking" Title="Куріння" />
