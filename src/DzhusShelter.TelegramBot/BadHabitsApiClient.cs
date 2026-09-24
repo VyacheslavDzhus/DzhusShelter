@@ -1,11 +1,29 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 
 namespace DzhusShelter.TelegramBot;
 
 public sealed record LogHabitEntryRequest(HabitType HabitType, HabitSubType SubType, DateTimeOffset OccurredAt, string? Notes);
 
+public enum LogEntryOutcome
+{
+    Logged,
+    AlreadyLogged,
+    Failed,
+}
+
 public sealed class BadHabitsApiClient
 {
+    // See DzhusShelter.UI's BadHabitsApiClient for the same lesson: the API returns camelCase
+    // property names, and HttpClient's default JSON options are case-sensitive — without this,
+    // deserializing the response silently produces default field values instead of throwing.
+    private static readonly JsonSerializerOptions ResponseJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
+
+    private sealed record LogHabitEntryResponse(Guid Id, bool AlreadyLogged);
+
     private readonly HttpClient _httpClient;
 
     public BadHabitsApiClient(HttpClient httpClient)
@@ -13,10 +31,14 @@ public sealed class BadHabitsApiClient
         _httpClient = httpClient;
     }
 
-    public async Task<bool> LogEntryAsync(HabitType habitType, HabitSubType subType, CancellationToken cancellationToken)
+    public async Task<LogEntryOutcome> LogEntryAsync(HabitType habitType, HabitSubType subType, CancellationToken cancellationToken)
     {
         var request = new LogHabitEntryRequest(habitType, subType, DateTimeOffset.UtcNow, null);
         var response = await _httpClient.PostAsJsonAsync("/api/bad-habits/entries", request, cancellationToken);
-        return response.IsSuccessStatusCode;
+        if (!response.IsSuccessStatusCode)
+            return LogEntryOutcome.Failed;
+
+        var body = await response.Content.ReadFromJsonAsync<LogHabitEntryResponse>(ResponseJsonOptions, cancellationToken);
+        return body is { AlreadyLogged: true } ? LogEntryOutcome.AlreadyLogged : LogEntryOutcome.Logged;
     }
 }
