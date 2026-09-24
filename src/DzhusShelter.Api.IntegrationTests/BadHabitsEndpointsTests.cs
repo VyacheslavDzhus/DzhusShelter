@@ -27,13 +27,17 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
         _client = factory.CreateClient();
     }
 
+    private sealed record LogEntryResponse(Guid Id, bool AlreadyLogged);
+
     [Fact]
     public async Task LoggingAnEntry_ThenFetchingIt_RoundTripsThroughPostgres()
     {
         var occurredAt = DateTimeOffset.UtcNow.AddMinutes(-10);
         var logResponse = await _client.PostAsJsonAsync("/api/bad-habits/entries",
             new LogHabitEntryCommand(HabitType.Alcohol, HabitSubType.Beer, occurredAt, "friday"));
-        logResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        logResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var logBody = await logResponse.Content.ReadFromJsonAsync<LogEntryResponse>(JsonOptions);
+        logBody!.AlreadyLogged.Should().BeFalse();
 
         var getResponse = await _client.GetAsync(
             $"/api/bad-habits/entries?from={Uri.EscapeDataString(occurredAt.AddMinutes(-1).ToString("O"))}" +
@@ -42,5 +46,31 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
 
         var entries = await getResponse.Content.ReadFromJsonAsync<List<HabitEntryDto>>(JsonOptions);
         entries.Should().ContainSingle(e => e.HabitType == HabitType.Alcohol && e.SubType == HabitSubType.Beer && e.Notes == "friday");
+    }
+
+    [Fact]
+    public async Task LoggingTheSameSubTypeTwiceOnTheSameDay_DoesNotDuplicate()
+    {
+        var occurredAt = DateTimeOffset.UtcNow.AddMinutes(-20);
+        var first = await _client.PostAsJsonAsync("/api/bad-habits/entries",
+            new LogHabitEntryCommand(HabitType.Smoking, HabitSubType.Hookah, occurredAt, null));
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        var firstBody = await first.Content.ReadFromJsonAsync<LogEntryResponse>(JsonOptions);
+
+        var second = await _client.PostAsJsonAsync("/api/bad-habits/entries",
+            new LogHabitEntryCommand(HabitType.Smoking, HabitSubType.Hookah, occurredAt.AddMinutes(5), null));
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        var secondBody = await second.Content.ReadFromJsonAsync<LogEntryResponse>(JsonOptions);
+
+        firstBody!.AlreadyLogged.Should().BeFalse();
+        secondBody!.AlreadyLogged.Should().BeTrue();
+        secondBody.Id.Should().Be(firstBody.Id);
+
+        var getResponse = await _client.GetAsync(
+            $"/api/bad-habits/entries?from={Uri.EscapeDataString(occurredAt.AddDays(-1).ToString("O"))}" +
+            $"&to={Uri.EscapeDataString(DateTimeOffset.UtcNow.ToString("O"))}" +
+            $"&habitType={HabitType.Smoking}&subType={HabitSubType.Hookah}");
+        var entries = await getResponse.Content.ReadFromJsonAsync<List<HabitEntryDto>>(JsonOptions);
+        entries.Should().HaveCount(1);
     }
 }
