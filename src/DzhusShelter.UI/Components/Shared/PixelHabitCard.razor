@@ -28,6 +28,43 @@
     else
     {
         <PixelMonthCalendar Year="_viewYear" Month="_viewMonth" MarkedDays="_markedDays" />
+
+        <div class="pixel-habit-card-stats-period">
+            <label>
+                Період:
+                <select class="nes-select" @bind="_statsPeriod" @bind:after="ReloadAsync">
+                    <option value="@StatsPeriod.ThisMonth">Цей місяць</option>
+                    <option value="@StatsPeriod.ThreeMonths">3 місяці</option>
+                    <option value="@StatsPeriod.Year">Рік</option>
+                    <option value="@StatsPeriod.Custom">Свій період</option>
+                </select>
+            </label>
+            @if (_statsPeriod == StatsPeriod.Custom)
+            {
+                <label>
+                    Від: <input type="date" class="nes-input" @bind="_customFrom" @bind:after="ReloadAsync" />
+                </label>
+                <label>
+                    До: <input type="date" class="nes-input" @bind="_customTo" @bind:after="ReloadAsync" />
+                </label>
+            }
+        </div>
+
+        @if (_stats.Count == 0)
+        {
+            <p>Немає даних за обраний період.</p>
+        }
+        else
+        {
+            <ul class="pixel-habit-card-stats-list">
+                @foreach (var stat in _stats)
+                {
+                    <li>
+                        @((MarkupString)HabitSubTypeCatalog.IconSvg(stat.SubType)) @HabitSubTypeCatalog.DisplayName(stat.SubType) ×@stat.Count
+                    </li>
+                }
+            </ul>
+        }
     }
 </PixelCard>
 
@@ -41,11 +78,23 @@
     [Parameter, EditorRequired] public HabitType HabitType { get; set; }
     [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
 
+    private enum StatsPeriod
+    {
+        ThisMonth,
+        ThreeMonths,
+        Year,
+        Custom,
+    }
+
     private string _selectedSubTypeRaw = "";
     private int _viewYear = DateTime.UtcNow.Year;
     private int _viewMonth = DateTime.UtcNow.Month;
     private List<HabitEntryDto>? _entries;
     private Dictionary<DateOnly, MarkupString> _markedDays = new();
+    private StatsPeriod _statsPeriod = StatsPeriod.ThisMonth;
+    private DateTime _customFrom = DateTime.UtcNow.Date.AddMonths(-1);
+    private DateTime _customTo = DateTime.UtcNow.Date;
+    private List<(HabitSubType SubType, int Count)> _stats = [];
 
     private HabitSubType? SelectedSubType =>
         Enum.TryParse<HabitSubType>(_selectedSubTypeRaw, out var parsed) ? parsed : null;
@@ -78,10 +127,38 @@
     {
         var monthStart = new DateTimeOffset(new DateTime(_viewYear, _viewMonth, 1), TimeSpan.Zero);
         var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+        var (statsFrom, statsTo) = GetStatsRange();
 
-        _entries = await ApiClient.GetEntriesAsync(monthStart, monthEnd, HabitType, SelectedSubType, CancellationToken.None);
-        _markedDays = BuildMarkedDays(_entries);
+        var rangeFrom = monthStart < statsFrom ? monthStart : statsFrom;
+        var rangeTo = monthEnd > statsTo ? monthEnd : statsTo;
+
+        _entries = await ApiClient.GetEntriesAsync(rangeFrom, rangeTo, HabitType, SelectedSubType, CancellationToken.None);
+        _markedDays = BuildMarkedDays(_entries.Where(e => e.OccurredAt >= monthStart && e.OccurredAt <= monthEnd));
+        _stats = ComputeStats(_entries, statsFrom, statsTo);
     }
+
+    private (DateTimeOffset From, DateTimeOffset To) GetStatsRange()
+    {
+        var today = DateTime.UtcNow.Date;
+        return _statsPeriod switch
+        {
+            StatsPeriod.ThisMonth => (new DateTimeOffset(new DateTime(today.Year, today.Month, 1), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.ThreeMonths => (new DateTimeOffset(today.AddMonths(-3), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.Year => (new DateTimeOffset(today.AddYears(-1), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.Custom => (
+                new DateTimeOffset(DateTime.SpecifyKind(_customFrom, DateTimeKind.Unspecified), TimeSpan.Zero),
+                new DateTimeOffset(DateTime.SpecifyKind(_customTo, DateTimeKind.Unspecified).AddDays(1).AddTicks(-1), TimeSpan.Zero)),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+
+    private static List<(HabitSubType SubType, int Count)> ComputeStats(IEnumerable<HabitEntryDto> entries, DateTimeOffset from, DateTimeOffset to) =>
+        entries
+            .Where(e => e.OccurredAt >= from && e.OccurredAt <= to)
+            .GroupBy(e => e.SubType)
+            .Select(g => (SubType: g.Key, Count: g.Count()))
+            .OrderByDescending(s => s.Count)
+            .ToList();
 
     private static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
     {
