@@ -15,7 +15,13 @@ public enum HabitSubType
     Vape = 2,
     Beer = 3,
     Wine = 4,
-    Spirits = 5,
+    Iqos = 6,
+    Hookah = 7,
+    Vodka = 8,
+    Whiskey = 9,
+    Rum = 10,
+    Gin = 11,
+    Martini = 12,
 }
 
 public sealed record HabitEntryDto(Guid Id, HabitType HabitType, HabitSubType SubType, DateTimeOffset OccurredAt, string? Notes);
