@@ -38,7 +38,18 @@ public sealed class BadHabitsApiClient
         if (!response.IsSuccessStatusCode)
             return LogEntryOutcome.Failed;
 
-        var body = await response.Content.ReadFromJsonAsync<LogHabitEntryResponse>(ResponseJsonOptions, cancellationToken);
+        LogHabitEntryResponse? body;
+        try
+        {
+            body = await response.Content.ReadFromJsonAsync<LogHabitEntryResponse>(ResponseJsonOptions, cancellationToken);
+        }
+        catch (JsonException)
+        {
+            // A 2xx status with an empty, truncated, or shape-mismatched body (proxy hiccup, API
+            // bug, misconfigured upstream) should degrade to Failed, not crash the caller.
+            return LogEntryOutcome.Failed;
+        }
+
         return body is { AlreadyLogged: true } ? LogEntryOutcome.AlreadyLogged : LogEntryOutcome.Logged;
     }
 }
