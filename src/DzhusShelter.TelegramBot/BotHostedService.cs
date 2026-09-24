@@ -89,7 +89,7 @@ public sealed class BotHostedService : BackgroundService
         {
             var buttons = BadHabitsKeyboard.SubTypesFor(habitType.Value)
                 .Select(subType => InlineKeyboardButton.WithCallbackData(
-                    subType.ToString(), BadHabitsKeyboard.SubTypeCallbackData(habitType.Value, subType)))
+                    BadHabitsKeyboard.DisplayName(subType), BadHabitsKeyboard.SubTypeCallbackData(habitType.Value, subType)))
                 .ToArray();
             var keyboard = new InlineKeyboardMarkup(buttons);
 
@@ -102,13 +102,18 @@ public sealed class BotHostedService : BackgroundService
         if (subTypeSelection is not null)
         {
             var (parsedHabitType, subType) = subTypeSelection.Value;
-            var succeeded = await _apiClient.LogEntryAsync(parsedHabitType, subType, cancellationToken);
+            var outcome = await _apiClient.LogEntryAsync(parsedHabitType, subType, cancellationToken);
+            var label = BadHabitsKeyboard.DisplayName(subType);
+
+            var message = outcome switch
+            {
+                LogEntryOutcome.Logged => $"Записано: {label}",
+                LogEntryOutcome.AlreadyLogged => $"Вже зафіксовано на сьогодні: {label}",
+                _ => "Не вдалося записати — спробуй ще раз.",
+            };
 
             await _botClient.AnswerCallbackQuery(callbackId, cancellationToken: cancellationToken);
-            await _botClient.SendMessage(
-                chatId,
-                succeeded ? $"Записано: {subType}" : "Не вдалося записати — спробуй ще раз.",
-                cancellationToken: cancellationToken);
+            await _botClient.SendMessage(chatId, message, cancellationToken: cancellationToken);
         }
     }
 
