@@ -551,7 +551,7 @@ git commit -m "test(api): cover the 200 OK response shape and same-day dedup end
 - Test: `src/DzhusShelter.TelegramBot.Tests/BadHabitsKeyboardTests.cs`
 
 **Interfaces:**
-- Produces: `HabitSubType` enum in the `DzhusShelter.TelegramBot` namespace matching Task 1's values exactly (same names, values don't need to match the Api project's since they're never compared cross-process — only the string names round-trip over HTTP). `BadHabitsKeyboard.SubTypesFor(HabitType)` returns the updated per-type lists. New `BadHabitsKeyboard.DisplayName(HabitSubType)` returns the Ukrainian label — Task 7 (`BotHostedService`) depends on this method.
+- Produces: `HabitSubType` enum in the `DzhusShelter.TelegramBot` namespace matching Task 1's values exactly. **Correction (found during final review):** the numeric values *do* need to match the Api project's copy — `BadHabitsApiClient.LogEntryAsync` posts with default `System.Text.Json` options (no `JsonStringEnumConverter`), so `HabitType`/`HabitSubType` cross the wire as raw integers in the Bot→Api direction, not names. Only the Api→UI direction (via `GetEntriesAsync`'s response, which the Api serializes as strings) depends solely on matching names. `BadHabitsKeyboard.SubTypesFor(HabitType)` returns the updated per-type lists. New `BadHabitsKeyboard.DisplayName(HabitSubType)` returns the Ukrainian label — Task 7 (`BotHostedService`) depends on this method.
 
 - [ ] **Step 1: Write the failing tests**
 

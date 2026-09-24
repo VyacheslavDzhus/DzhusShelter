@@ -19,6 +19,8 @@ This replaces the original "streak counter" version of this spec (single habit, 
 
 `HabitType`/`HabitSubType` are duplicated (not shared via a common project) across `DzhusShelter.Api`, `DzhusShelter.TelegramBot`, and `DzhusShelter.UI` — a deliberate choice to keep the three deployables independent over the HTTP boundary. Adding a subtype means updating the enum (and, in Api/Bot, the `HabitType → HabitSubType[]` mapping) in every project that defines it. Revisit this duplication (e.g. a shared `Contracts` project) only if it becomes a recurring source of drift bugs — not before.
 
+The three copies' member **names** always need to match (that's what round-trips as JSON in every direction). Their numeric **values** matter too, but only in the Bot→Api direction: the bot posts `LogHabitEntryCommand` with default `System.Text.Json` options (no `JsonStringEnumConverter`), so the enum crosses the wire as a raw integer there, and the Api's model binder happens to accept integers as well as names. Api→UI (fetching entries) only depends on names, since the Api serializes its responses as strings. Don't renumber the Bot's or Api's copy independently — check both files together.
+
 The original catch-all `Spirits` subtype was removed and replaced with the specific spirits above; no production data referenced it, so no migration was needed (`SubType` is persisted as a string column, so removing an enum member is safe as long as no stored row still uses that string).
 
 ## Application (CQRS)
