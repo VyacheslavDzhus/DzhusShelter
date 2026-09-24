@@ -1,6 +1,5 @@
 @page "/bad-habits"
 @rendermode InteractiveServer
-@using ApexCharts
 @using DzhusShelter.UI.Services
 @inject BadHabitsApiClient ApiClient
 
@@ -28,40 +27,24 @@
     </div>
 </div>
 
-<div class="nes-container with-title is-dark" style="margin-top: 1rem;">
-    <p class="title">Графік</p>
-    @if (_entries is null)
-    {
-        <p><em>Завантаження...</em></p>
-    }
-    else if (_entries.Count == 0)
-    {
-        <p>Немає записів за обраний період.</p>
-    }
-    else
-    {
-        @* @key forces Blazor to tear down and recreate the chart whenever the underlying data
-           changes — ApexChart doesn't otherwise pick up a new Items collection reference on its
-           own after the first render (confirmed by hand: changing filters updated the API call
-           but left the chart showing stale data until this was added). *@
-        <ApexChart @key="_renderKey" TItem="DailyCount" Title="Кількість подій за днями">
-            <ApexPointSeries TItem="DailyCount"
-                             Items="_dailyCounts"
-                             Name="Записи"
-                             XValue="e => e.Date"
-                             YValue="e => e.Count"
-                             SeriesType="SeriesType.Bar" />
-        </ApexChart>
-    }
-</div>
+@if (_entries is null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else
+{
+    <PixelChart Title="Кількість подій за днями"
+                Data="_chartData"
+                SeriesName="Записи"
+                EmptyMessage="Немає записів за обраний період." />
+}
 
 @code {
     private DateTime _fromDate = DateTime.Today.AddDays(-30);
     private DateTime _toDate = DateTime.Today;
     private string _selectedHabitType = "";
     private List<HabitEntryDto>? _entries;
-    private List<DailyCount> _dailyCounts = [];
-    private int _renderKey;
+    private List<ChartDataPoint> _chartData = [];
 
     protected override async Task OnInitializedAsync() => await ReloadAsync();
 
@@ -82,13 +65,10 @@
             null,
             CancellationToken.None);
 
-        _dailyCounts = _entries
+        _chartData = _entries
             .GroupBy(e => e.OccurredAt.Date)
-            .Select(g => new DailyCount(g.Key, g.Count()))
-            .OrderBy(d => d.Date)
+            .OrderBy(g => g.Key)
+            .Select(g => new ChartDataPoint(g.Key.ToString("dd.MM"), g.Count()))
             .ToList();
-        _renderKey++;
     }
-
-    private sealed record DailyCount(DateTime Date, int Count);
 }

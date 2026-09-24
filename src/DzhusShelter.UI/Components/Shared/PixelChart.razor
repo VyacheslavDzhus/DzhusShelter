@@ -1,0 +1,123 @@
+@using ApexCharts
+
+<PixelCard Title="@Title" Subtitle="@Subtitle" Class="@Class">
+    @if (Data.Count == 0)
+    {
+        <p class="pixel-chart-empty">@EmptyMessage</p>
+    }
+    else
+    {
+        <div class="pixel-chart-toolbar">
+            <button type="button"
+                    class="nes-btn @(_chartType == PixelChartType.Line ? "is-primary" : "")"
+                    title="Лінія"
+                    @onclick="() => SetChartType(PixelChartType.Line)">
+                <svg viewBox="0 0 16 16" width="16" height="16">
+                    <path d="M1 12 L5 12 L5 8 L9 8 L9 4 L15 4" fill="none" stroke="currentColor" stroke-width="2" />
+                </svg>
+            </button>
+            <button type="button"
+                    class="nes-btn @(_chartType == PixelChartType.Donut ? "is-primary" : "")"
+                    title="Кружок"
+                    @onclick="() => SetChartType(PixelChartType.Donut)">
+                <svg viewBox="0 0 16 16" width="16" height="16">
+                    <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="3" />
+                </svg>
+            </button>
+        </div>
+
+        @* @key forces ApexChart to tear down and recreate whenever the data or the selected
+           chart type changes — it doesn't otherwise pick up a new Items reference or a changed
+           SeriesType after the first render (same quirk already worked around in BadHabits.razor). *@
+        <ApexChart @key="_renderKey" TItem="ChartDataPoint" Options="_options">
+            <ApexPointSeries TItem="ChartDataPoint"
+                             Items="Data"
+                             Name="@SeriesName"
+                             XValue="d => d.Label"
+                             YValue="d => (decimal)d.Value"
+                             SeriesType="@(_chartType == PixelChartType.Line ? SeriesType.Line : SeriesType.Donut)" />
+        </ApexChart>
+    }
+</PixelCard>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Subtitle { get; set; } = string.Empty;
+    [Parameter] public string Class { get; set; } = string.Empty;
+    [Parameter, EditorRequired] public IReadOnlyList<ChartDataPoint> Data { get; set; } = [];
+    [Parameter] public string SeriesName { get; set; } = "Дані";
+    [Parameter] public string EmptyMessage { get; set; } = "Немає даних для відображення.";
+
+    private enum PixelChartType { Line, Donut }
+
+    private const string PixelFont = "'Press Start 2P', cursive";
+
+    private PixelChartType _chartType = PixelChartType.Line;
+    private int _renderKey;
+    private readonly ApexChartOptions<ChartDataPoint> _options = BuildOptions();
+
+    protected override void OnParametersSet() => _renderKey++;
+
+    private void SetChartType(PixelChartType type)
+    {
+        _chartType = type;
+        _renderKey++;
+    }
+
+    private static ApexChartOptions<ChartDataPoint> BuildOptions() => new()
+    {
+        Colors = ["#5aa9e6", "#5cd65c", "#ffcc00", "#ff5555", "#bd93f9", "#ff9f43"],
+        Chart = new Chart
+        {
+            FontFamily = PixelFont,
+            ForeColor = "#e0e0e0",
+            Toolbar = new Toolbar { Show = false },
+        },
+        Stroke = new Stroke
+        {
+            Curve = Curve.Stepline,
+            Width = 3,
+            Colors = ["#000000"],
+        },
+        Markers = new Markers
+        {
+            Size = 6,
+            Shape = MarkerShape.Square,
+            StrokeColors = "#000000",
+            StrokeWidth = 2,
+        },
+        Fill = new Fill { Type = FillType.Solid },
+        DataLabels = new DataLabels
+        {
+            Style = new DataLabelsStyle { FontFamily = PixelFont, FontSize = "10px" },
+        },
+        Legend = new Legend
+        {
+            FontFamily = PixelFont,
+            Labels = new LegendLabels { Colors = "#e0e0e0" },
+        },
+        Grid = new Grid { BorderColor = "#38383b" },
+        Xaxis = new XAxis
+        {
+            Labels = new XAxisLabels { Style = new AxisLabelStyle { FontFamily = PixelFont, FontSize = "9px", Colors = "#e0e0e0" } },
+        },
+        Yaxis =
+        [
+            new YAxis
+            {
+                Labels = new YAxisLabels { Style = new AxisLabelStyle { FontFamily = PixelFont, FontSize = "9px", Colors = "#e0e0e0" } },
+            }
+        ],
+        PlotOptions = new PlotOptions
+        {
+            Pie = new PlotOptionsPie
+            {
+                Donut = new PlotOptionsDonut
+                {
+                    Size = "65%",
+                    Labels = new DonutLabels { Show = true },
+                },
+            },
+        },
+    };
+}
