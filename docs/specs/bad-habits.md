@@ -36,7 +36,7 @@ At most one `HabitEntry` per `(HabitType, SubType, calendar day)` — drinking 3
 ## API
 
 - `POST /api/bad-habits/entries` — logs one occurrence (or no-ops if already logged today, per the dedup rule). Returns `200 OK { id, alreadyLogged }`. Called by the Telegram bot.
-- `GET /api/bad-habits/entries?from=&to=&habitType=&subType=` — returns entries for the chart. Called by Blazor.
+- `GET /api/bad-habits/entries?from=&to=&habitType=&subType=` — returns matching entries. Called by Blazor (each `PixelHabitCard` calls this once per render, see **UI** below).
 
 Hosted in `DzhusShelter.Api`'s `BadHabitsController` (see [docs/architecture.md](../architecture.md) for why this isn't in the Blazor project directly).
 
@@ -50,9 +50,18 @@ This bot process is the same one described in [bots.md](bots.md); reconcile the 
 
 ## UI
 
-`BadHabits.razor`: filter controls (date range, `HabitType`/`SubType` dropdowns) driving a `GET` to the API, rendered via `PixelChart` (a reusable pixel-art-themed line/donut chart component — see [Components/Shared/PixelChart.razor](../../src/DzhusShelter.UI/Components/Shared/PixelChart.razor)) wrapping **Blazor-ApexCharts**. Chart shows occurrence counts over time, filterable by type/subtype.
+`BadHabits.razor` renders two independent `PixelHabitCard` instances — one per `HabitType` (`Alcohol`, `Smoking`) — and nothing else. The page-level date-range/`HabitType` filter bar from the old single-chart layout is gone; each card owns its own state entirely.
 
-**Planned next (not yet built):** replace this single combined chart with two separate `PixelCard`-based cards, one per `HabitType` (Alcohol, Smoking), each with a subtype filter, a month calendar marking days with a matching entry, and a subtype-count summary over a chosen period (e.g. "last 2 months: Beer ×10, Whiskey ×3"). `PixelChart` stays as a reusable component for future features (e.g. Gym trends) but isn't the display for Bad Habits going forward. Custom pixel-art SVG icons per subtype belong to this phase, since Telegram bot buttons can't render them (plain text only).
+**`PixelHabitCard.razor`** (`Components/Shared/`), one component parameterized by `HabitType` + `Title`, instantiated twice:
+- A subtype filter (`nes-select`: "Всі" + that `HabitType`'s subtypes, from `HabitSubTypeCatalog.SubTypesFor(HabitType)`). This one filter drives *both* the calendar and the stats list below — there's no separate per-section filter.
+- Month navigation (◀ / ▶ around a "Month Year" label, Ukrainian month names) plus a calendar grid for the displayed month, delegated to **`PixelMonthCalendar.razor`** (`Components/Shared/`) — a pure presentational component (`Year`, `Month`, `IReadOnlyDictionary<DateOnly, MarkupString>` of marked-day icons; no data fetching of its own, reusable for any future per-day marker feature). A day is marked when at least one entry matching the current subtype filter falls on it; the icon shown is that subtype's pixel-art icon, or — when the filter is "Всі" and more than one distinct subtype occurred that day — the lowest-`HabitSubType`-value one's icon with a small "+" badge.
+- A stats period selector (`nes-select`: "Цей місяць" / "3 місяці" / "Рік" / "Свій період" — the last reveals two date inputs) and, below it, a list of `{icon} {label} ×{count}` lines for every subtype with `count > 0` in that period (respecting the same subtype filter), sorted by count descending.
+
+**`HabitSubTypeCatalog.cs`** (`Components/Shared/`, new): the UI-side counterpart to the Bot's `BadHabitsKeyboard` — `SubTypesFor(HabitType)`, `DisplayName(HabitSubType)` (same Ukrainian strings as the bot), and `IconSvg(HabitSubType)` returning a hand-authored pixel-art icon (`~16×16` blocky `<rect>`-based SVG, `MarkupString`) for each of the 11 subtypes.
+
+**Data:** no Api or Bot changes for this phase. Each `PixelHabitCard` makes one `BadHabitsApiClient.GetEntriesAsync` call per render — range = the union of the displayed month and the selected stats period — and computes both the calendar's marked days and the stats counts client-side from that one result set, the same client-side-aggregation pattern the old single chart already used.
+
+`PixelChart` (the line/donut ApexCharts wrapper built for the old single-chart layout) stops being used by this page but stays in the codebase as a reusable component for a future feature (e.g. Gym trends) — it was explicitly designed generic, not Bad-Habits-specific.
 
 ## Persistence
 
@@ -60,11 +69,15 @@ PostgreSQL via EF Core, per [docs/architecture.md](../architecture.md) (the earl
 
 ## Open Decisions (resolved during implementation)
 
-- `GetHabitEntriesQuery` returns raw entries (`HabitEntryDto` list); per-day aggregation for the chart happens client-side in `BadHabits.razor`, not server-side — kept the API generic in case another consumer wants unaggregated data later
+- `GetHabitEntriesQuery` returns raw entries (`HabitEntryDto` list); day/subtype aggregation happens client-side (originally in `BadHabits.razor` for the single chart, now inside each `PixelHabitCard`), not server-side — kept the API generic in case another consumer wants unaggregated data later
 - `Notes` stayed API-only — the bot flow doesn't prompt for it, always logs `null`
 - The `Spirits` catch-all subtype was replaced by naming the specific spirits (`Vodka`/`Whiskey`/`Rum`/`Gin`/`Martini`) instead — no real data depended on the old value, so this was a plain enum edit, not a migration
 - Dedup ("one entry per subtype per day") was added because logging every individual drink/cigarette produced noise the user didn't want tracked at that granularity — it changes `LogHabitEntryCommand`'s result shape (`LogHabitEntryResult` with `AlreadyLogged`) rather than silently dropping the duplicate, so the bot can tell the user what happened
 - `HabitType`/`HabitSubType` duplication across the three projects was reconsidered (introduce a shared `Contracts` project?) and deliberately kept as-is for now — see the **Data Model** section
+- One subtype filter per card drives both the calendar and the stats list (not two independent filters) — the user found a single filter simpler to reason about, and it maps directly onto "show me my Beer days" as one mental action
+- Marked calendar days show a small pixel-art icon, not just a colored highlight — worth the extra per-subtype icon authoring because a bare highlight carries no information at a glance when the filter is "Всі"
+- Stats period is independent of the calendar's displayed month (fixed presets: this month / 3 months / year / custom range) rather than always matching whatever month the calendar happens to show — the user specifically wanted to see "last 3 months" totals while still being able to browse the calendar month by month
+- The old page-level date-range/`HabitType` filter bar was removed entirely rather than kept alongside the two cards' own filters — two sources of truth for "what am I looking at" would have been more confusing than each card being fully self-contained
 - Still genuinely open: no auth between bot/Blazor/API — see [docs/architecture.md](../architecture.md)'s Security section for the condition that makes this acceptable in the current deployment (API's port isn't published in `docker-compose.yml`)
 
 ## Out of Scope
@@ -73,4 +86,5 @@ PostgreSQL via EF Core, per [docs/architecture.md](../architecture.md) (the earl
 - Habit types beyond smoking and alcohol (add as new `HabitType`/`SubType` enum values when needed)
 - Reminders/notifications
 - Quantity tracking within a day (dedup means "did it happen today", not "how many times") — would need a distinct feature/data shape if ever wanted
-- The calendar + subtype-stats card redesign described under **UI → Planned next** — tracked as a separate, later implementation pass
+- Clicking/drilling into a marked calendar day for entry-level detail (day markers are read-only at a glance)
+- Editing which subtype filter drives the calendar vs. the stats list independently — one filter always drives both
