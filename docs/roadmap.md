@@ -51,7 +51,7 @@ S3, Amazon S3 Client, MinIO, presigned-посилання, multipart-заван�
 - **Обробка файлів** — FFmpeg для відеообробки, робота з PDF (QuestPDF, PdfSharp), робота з Excel (EPPlus, ClosedXML), ZIP/RAR, робота з файлами великого розміру (Stream). *Практика:* звіти, аудити, генерація файлів.
 
 ### 7. Брокери повідомлень
-RabbitMQ, Kafka, подійно-орієнтована архітектура, інтеграційні події, Pub/Sub, Producers/Consumers, Outbox патерн, Dead letter queue. *Практика:* пишемо другий сервіс, що слухає черги/топіки, куди перший сервіс надсилає повідомлення.
+RabbitMQ, Kafka, подійно-орієнтована архітектура, інтеграційні події, Pub/Sub, Producers/Consumers, Outbox патерн, Inbox патерн (ідемпотентний consumer), Dead letter queue. *Практика:* пишемо другий сервіс, що слухає черги/топіки, куди перший сервіс надсилає повідомлення.
 
 - **Мікросервіси** — брокери повідомлень, контейнеризація, синхронна/асинхронна взаємодія, HTTP/gRPC-комунікація, Vertical Slice Design. *Практика:* розбиваємо моноліт на частини (або одразу проєктуємо модульний застосунок і ділимо на модулі), продумуємо взаємодію сервісів, вивчаємо популярні патерни мікросервісної архітектури.
   - **Патерни в мікросервісах і архітектурі** — DDD, API Gateway, BFF (Backend for Frontend), Circuit Breaker, Retry, Rate Limiting, Database per Service, Saga, Event Sourcing, розподілений трейсинг/логування, автентифікація в мікросервісах, Keycloak. *Практика:* вивчаємо ці патерни, акуратно й поступово впроваджуємо їх у мікросервісах.
@@ -91,6 +91,19 @@ Rough order — simple CRUD first to nail down Clean Architecture basics, then l
 | 4 | Screen Time | First externally-callable ingest endpoint — auth, rate limiting; candidate for an Outbox + domain event once ingestion needs to trigger other work |
 | 5 | Bots | RabbitMQ/event-driven send, Outbox pattern for reliable Telegram delivery, Circuit Breaker around the Telegram API call; Bots' "message log" view is also a natural fit for SignalR live updates |
 | 6 (stretch) | Cross-cutting | Serilog + Elastic/Grafana/Prometheus/OpenTelemetry across all features, Auth (JWT → Keycloak), CI/CD pipeline, first custom MCP server exposing this app's data to an agent |
+
+### Committed next: Outbox + Inbox patterns
+
+User explicitly wants to learn these (2026-09-24). Problems they solve:
+- **Outbox** — the dual-write problem: saving to the DB and publishing a message are two separate operations, so a crash between them loses the message (or publishes one for data that was rolled back). Fix: write the message into an `OutboxMessages` table in the **same DB transaction** as the business data; a background relay publishes it afterwards.
+- **Inbox** — at-least-once delivery means the consumer will sometimes get the same message twice. Fix: record each processed message ID in an `InboxMessages` table and skip ones already seen (idempotent consumer).
+
+Candidate applications in this repo, in suggested order (simple first):
+
+1. **Inbox without a broker — idempotent Bot → Api writes.** Motivated by a real incident on 2026-09-23: the bot couldn't reach `api` and the entry was just lost ("Не вдалося записати"). Add retries in the bot (Polly) with an idempotency key (the Telegram callback query ID); `api` records processed keys in an Inbox table so a retry after a timeout never logs the same cigarette twice.
+2. **Outbox + RabbitMQ + Inbox — `HabitEntryLogged` event.** `api` writes the event to its outbox in the same transaction as the `HabitEntry`; a `BackgroundService` relay publishes it to RabbitMQ; the bot consumes it and sends something useful (e.g. a daily-limit warning "Сьогодні вже 10 сигарет"), with an Inbox on the consumer side so a redelivered event doesn't send the warning twice. This is also the first real use of a message broker (curriculum step 7).
+
+Not decided yet — pick one when starting, write a spec in `docs/specs/` first.
 
 ## Progress log
 
