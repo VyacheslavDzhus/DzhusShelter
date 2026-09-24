@@ -1,5 +1,7 @@
 using DzhusShelter.Api.Application.Abstractions;
-using DzhusShelter.Api.Application.BadHabits;
+using DzhusShelter.Api.Application.BadHabits.Commands;
+using DzhusShelter.Api.Application.BadHabits.Dtos;
+using DzhusShelter.Api.Application.BadHabits.Queries;
 using DzhusShelter.Api.Controllers;
 using DzhusShelter.Api.Domain.BadHabits;
 using DzhusShelter.Api.Domain.Common;

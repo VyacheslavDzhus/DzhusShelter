@@ -1,8 +1,10 @@
 using DzhusShelter.Api.Application.Abstractions;
+using DzhusShelter.Api.Application.BadHabits;
+using DzhusShelter.Api.Application.BadHabits.Dtos;
 using DzhusShelter.Api.Domain.Common;
 using FluentValidation;
 
-namespace DzhusShelter.Api.Application.BadHabits;
+namespace DzhusShelter.Api.Application.BadHabits.Queries;
 
 public sealed class GetHabitEntriesQueryHandler : IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>
 {

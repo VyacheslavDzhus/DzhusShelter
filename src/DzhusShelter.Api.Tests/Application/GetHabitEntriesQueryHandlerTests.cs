@@ -1,4 +1,6 @@
 using DzhusShelter.Api.Application.BadHabits;
+using DzhusShelter.Api.Application.BadHabits.Dtos;
+using DzhusShelter.Api.Application.BadHabits.Queries;
 using DzhusShelter.Api.Domain.BadHabits;
 using FluentAssertions;
 using Microsoft.Extensions.Time.Testing;
