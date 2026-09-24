@@ -1,0 +1,17 @@
+.pixel-habit-card-filter {
+    margin-bottom: 12px;
+}
+
+.pixel-habit-card-month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.pixel-habit-card-month-label {
+    font-size: 12px;
+    min-width: 140px;
+    text-align: center;
+}

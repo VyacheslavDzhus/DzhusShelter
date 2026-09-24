@@ -1,0 +1,100 @@
+@using DzhusShelter.UI.Services
+@inject BadHabitsApiClient ApiClient
+
+<PixelCard Title="@Title" Class="pixel-habit-card">
+    <div class="pixel-habit-card-filter">
+        <label>
+            Підтип:
+            <select class="nes-select" @bind="_selectedSubTypeRaw" @bind:after="ReloadAsync">
+                <option value="">Всі</option>
+                @foreach (var subType in HabitSubTypeCatalog.SubTypesFor(HabitType))
+                {
+                    <option value="@subType">@HabitSubTypeCatalog.DisplayName(subType)</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <div class="pixel-habit-card-month-nav">
+        <button type="button" class="nes-btn" @onclick="GoToPreviousMonth">◀</button>
+        <span class="pixel-habit-card-month-label">@MonthNames[_viewMonth - 1] @_viewYear</span>
+        <button type="button" class="nes-btn" @onclick="GoToNextMonth">▶</button>
+    </div>
+
+    @if (_entries is null)
+    {
+        <p><em>Завантаження...</em></p>
+    }
+    else
+    {
+        <PixelMonthCalendar Year="_viewYear" Month="_viewMonth" MarkedDays="_markedDays" />
+    }
+</PixelCard>
+
+@code {
+    private static readonly string[] MonthNames =
+    [
+        "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+        "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+    ];
+
+    [Parameter, EditorRequired] public HabitType HabitType { get; set; }
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    private string _selectedSubTypeRaw = "";
+    private int _viewYear = DateTime.UtcNow.Year;
+    private int _viewMonth = DateTime.UtcNow.Month;
+    private List<HabitEntryDto>? _entries;
+    private Dictionary<DateOnly, MarkupString> _markedDays = new();
+
+    private HabitSubType? SelectedSubType =>
+        Enum.TryParse<HabitSubType>(_selectedSubTypeRaw, out var parsed) ? parsed : null;
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task GoToPreviousMonth()
+    {
+        _viewMonth--;
+        if (_viewMonth < 1)
+        {
+            _viewMonth = 12;
+            _viewYear--;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task GoToNextMonth()
+    {
+        _viewMonth++;
+        if (_viewMonth > 12)
+        {
+            _viewMonth = 1;
+            _viewYear++;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        var monthStart = new DateTimeOffset(new DateTime(_viewYear, _viewMonth, 1), TimeSpan.Zero);
+        var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+
+        _entries = await ApiClient.GetEntriesAsync(monthStart, monthEnd, HabitType, SelectedSubType, CancellationToken.None);
+        _markedDays = BuildMarkedDays(_entries);
+    }
+
+    private static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
+    {
+        var result = new Dictionary<DateOnly, MarkupString>();
+        foreach (var group in entries.GroupBy(e => DateOnly.FromDateTime(e.OccurredAt.UtcDateTime.Date)))
+        {
+            var distinctSubTypes = group.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
+            var primaryIcon = HabitSubTypeCatalog.IconSvg(distinctSubTypes[0]);
+            var markup = distinctSubTypes.Count > 1
+                ? $"<div class=\"pixel-calendar-marker\">{primaryIcon}<span class=\"pixel-calendar-plus\">+</span></div>"
+                : $"<div class=\"pixel-calendar-marker\">{primaryIcon}</div>";
+            result[group.Key] = new MarkupString(markup);
+        }
+        return result;
+    }
+}
