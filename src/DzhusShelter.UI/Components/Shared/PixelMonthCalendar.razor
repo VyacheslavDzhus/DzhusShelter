@@ -1,0 +1,57 @@
+<div class="pixel-calendar">
+    <div class="pixel-calendar-weekday-row">
+        @foreach (var day in WeekdayHeaders)
+        {
+            <div class="pixel-calendar-weekday">@day</div>
+        }
+    </div>
+    <div class="pixel-calendar-grid">
+        @foreach (var cell in BuildCells())
+        {
+            @if (cell is null)
+            {
+                <div class="pixel-calendar-cell pixel-calendar-cell-blank"></div>
+            }
+            else
+            {
+                var (day, date) = cell.Value;
+                <div class="pixel-calendar-cell @(MarkedDays.ContainsKey(date) ? "pixel-calendar-cell-marked" : "")">
+                    <span class="pixel-calendar-day-number">@day</span>
+                    @if (MarkedDays.TryGetValue(date, out var marker))
+                    {
+                        @marker
+                    }
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@code {
+    private static readonly string[] WeekdayHeaders = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+
+    [Parameter, EditorRequired] public int Year { get; set; }
+    [Parameter, EditorRequired] public int Month { get; set; }
+    [Parameter] public IReadOnlyDictionary<DateOnly, MarkupString> MarkedDays { get; set; } = new Dictionary<DateOnly, MarkupString>();
+
+    private List<(int Day, DateOnly Date)?> BuildCells()
+    {
+        var daysInMonth = DateTime.DaysInMonth(Year, Month);
+        var firstDay = new DateOnly(Year, Month, 1);
+        // DayOfWeek: Sunday = 0 .. Saturday = 6. Convert to Monday-first index (0 = Monday .. 6 = Sunday).
+        var leadingBlanks = ((int)firstDay.DayOfWeek + 6) % 7;
+
+        var cells = new List<(int, DateOnly)?>();
+        for (var i = 0; i < leadingBlanks; i++)
+            cells.Add(null);
+
+        for (var day = 1; day <= daysInMonth; day++)
+            cells.Add((day, new DateOnly(Year, Month, day)));
+
+        var trailingBlanks = (7 - cells.Count % 7) % 7;
+        for (var i = 0; i < trailingBlanks; i++)
+            cells.Add(null);
+
+        return cells;
+    }
+}

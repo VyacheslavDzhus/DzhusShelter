@@ -1,0 +1,59 @@
+.pixel-calendar {
+    color: #ffffff;
+}
+
+.pixel-calendar-weekday-row,
+.pixel-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.pixel-calendar-weekday {
+    text-align: center;
+    font-size: 10px;
+    color: #cccccc;
+    padding: 2px 0;
+}
+
+.pixel-calendar-cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #1a1a1c;
+    border: 1px solid #38383b;
+}
+
+.pixel-calendar-cell-blank {
+    background-color: transparent;
+    border: none;
+}
+
+.pixel-calendar-cell-marked {
+    background-color: #38383b;
+    border: 1px solid #5e5e62;
+}
+
+.pixel-calendar-day-number {
+    font-size: 9px;
+    line-height: 1;
+}
+
+.pixel-calendar-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pixel-calendar-plus {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 8px;
+    color: #ffcc00;
+    text-shadow: 1px 1px 0px #000;
+}
