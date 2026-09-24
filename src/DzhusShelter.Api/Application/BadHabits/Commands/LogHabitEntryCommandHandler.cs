@@ -1,9 +1,10 @@
 using DzhusShelter.Api.Application.Abstractions;
+using DzhusShelter.Api.Application.BadHabits;
 using DzhusShelter.Api.Domain.BadHabits;
 using DzhusShelter.Api.Domain.Common;
 using FluentValidation;
 
-namespace DzhusShelter.Api.Application.BadHabits;
+namespace DzhusShelter.Api.Application.BadHabits.Commands;
 
 public sealed class LogHabitEntryCommandHandler : ICommandHandler<LogHabitEntryCommand, Result<Guid>>
 {

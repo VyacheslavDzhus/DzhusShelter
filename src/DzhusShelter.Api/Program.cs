@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 using DzhusShelter.Api.Application.Abstractions;
 using DzhusShelter.Api.Application.BadHabits;
+using DzhusShelter.Api.Application.BadHabits.Commands;
+using DzhusShelter.Api.Application.BadHabits.Dtos;
+using DzhusShelter.Api.Application.BadHabits.Queries;
 using DzhusShelter.Api.Domain.Common;
 using DzhusShelter.Api.Infrastructure;
 using DzhusShelter.Api.Infrastructure.BadHabits;

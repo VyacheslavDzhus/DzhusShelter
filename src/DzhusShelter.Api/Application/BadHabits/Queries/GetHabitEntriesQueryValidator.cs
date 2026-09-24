@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace DzhusShelter.Api.Application.BadHabits;
+namespace DzhusShelter.Api.Application.BadHabits.Queries;
 
 public sealed class GetHabitEntriesQueryValidator : AbstractValidator<GetHabitEntriesQuery>
 {

@@ -5,6 +5,10 @@ description: Use when building, running, or deploying the DzhusShelter app via D
 
 # Deploy Dzhus Shelter
 
+## Git workflow: `dev` vs `main`
+
+Day-to-day work happens on `dev` — commit and push there freely. `main` is the "ship to prod" branch: merging `dev` into `main` (and pushing) is what triggers the CI pipeline below and puts a fresh build in front of CasaOS. Don't push directly to `main` for in-progress work; merge into it only when ready to deploy.
+
 ## Local run (no Docker)
 
 ```bash

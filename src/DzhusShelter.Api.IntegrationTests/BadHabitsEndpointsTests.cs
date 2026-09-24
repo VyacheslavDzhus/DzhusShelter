@@ -2,7 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using DzhusShelter.Api.Application.BadHabits;
+using DzhusShelter.Api.Application.BadHabits.Commands;
+using DzhusShelter.Api.Application.BadHabits.Dtos;
 using DzhusShelter.Api.Domain.BadHabits;
 using FluentAssertions;
 
