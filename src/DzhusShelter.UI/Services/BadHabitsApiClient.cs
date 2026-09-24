@@ -9,6 +9,10 @@ public enum HabitType
     Alcohol = 2,
 }
 
+// This project only reads these enums from the Api's GET responses, which use
+// JsonStringEnumConverter, so only the names need to match. Kept numerically identical to
+// DzhusShelter.Api's copy anyway (src/DzhusShelter.Api/Domain/BadHabits/HabitSubType.cs) for
+// consistency — the Bot's copy of this enum does depend on the numbers matching.
 public enum HabitSubType
 {
     Cigarette = 1,

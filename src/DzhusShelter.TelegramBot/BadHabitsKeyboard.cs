@@ -6,6 +6,10 @@ public enum HabitType
     Alcohol = 2,
 }
 
+// Posted to the Api via PostAsJsonAsync with default System.Text.Json options (no
+// JsonStringEnumConverter), so these serialize as raw integers, not names. The numeric
+// values here must stay identical to DzhusShelter.Api's copy
+// (src/DzhusShelter.Api/Domain/BadHabits/HabitSubType.cs) — check that file before renumbering.
 public enum HabitSubType
 {
     Cigarette = 1,

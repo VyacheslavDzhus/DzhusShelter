@@ -91,7 +91,9 @@ public sealed class BotHostedService : BackgroundService
                 .Select(subType => InlineKeyboardButton.WithCallbackData(
                     BadHabitsKeyboard.DisplayName(subType), BadHabitsKeyboard.SubTypeCallbackData(habitType.Value, subType)))
                 .ToArray();
-            var keyboard = new InlineKeyboardMarkup(buttons);
+            // Chunk into rows of 3 so long Cyrillic labels (e.g. all 7 alcohol subtypes) don't
+            // get crammed into a single unreadable row on a phone screen.
+            var keyboard = new InlineKeyboardMarkup(buttons.Chunk(3));
 
             await _botClient.AnswerCallbackQuery(callbackId, cancellationToken: cancellationToken);
             await _botClient.SendMessage(chatId, "Який саме?", replyMarkup: keyboard, cancellationToken: cancellationToken);

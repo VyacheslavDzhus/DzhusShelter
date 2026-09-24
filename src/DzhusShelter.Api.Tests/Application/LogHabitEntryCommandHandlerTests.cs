@@ -45,6 +45,29 @@ public class LogHabitEntryCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ComputesUtcDayRangeFromNonUtcOccurredAt()
+    {
+        // 01:00 in UTC+3 on 2026-01-15 is 22:00 UTC on 2026-01-14 — the handler must query the
+        // UTC calendar day the entry actually falls on, not the day in the original offset.
+        var occurredAt = new DateTimeOffset(2026, 1, 15, 1, 0, 0, TimeSpan.FromHours(3));
+        var expectedDayStart = new DateTimeOffset(2026, 1, 14, 0, 0, 0, TimeSpan.Zero);
+        var expectedDayEnd = new DateTimeOffset(2026, 1, 15, 0, 0, 0, TimeSpan.Zero).AddTicks(-1);
+
+        var repository = Substitute.For<IHabitEntryRepository>();
+        repository
+            .GetAsync(Arg.Any<DateTimeOffset>(), Arg.Any<DateTimeOffset>(), Arg.Any<HabitType>(), Arg.Any<HabitSubType>(), Arg.Any<CancellationToken>())
+            .Returns(new List<HabitEntry>());
+        var handler = new LogHabitEntryCommandHandler(repository, new LogHabitEntryCommandValidator(), new FakeTimeProvider(Now));
+        var command = new LogHabitEntryCommand(HabitType.Alcohol, HabitSubType.Beer, occurredAt, null);
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        await repository.Received(1).GetAsync(
+            expectedDayStart, expectedDayEnd, HabitType.Alcohol, HabitSubType.Beer, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task Handle_WhenSameSubTypeAlreadyLoggedToday_DoesNotPersistAndReturnsAlreadyLogged()
     {
         var repository = Substitute.For<IHabitEntryRepository>();
