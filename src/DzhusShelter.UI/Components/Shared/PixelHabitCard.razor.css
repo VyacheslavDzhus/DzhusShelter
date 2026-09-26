@@ -1,0 +1,39 @@
+.pixel-habit-card-filter {
+    margin-bottom: 12px;
+}
+
+.pixel-habit-card-month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.pixel-habit-card-month-label {
+    font-size: 12px;
+    min-width: 140px;
+    text-align: center;
+}
+
+.pixel-habit-card-stats-period {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 16px 0 8px;
+}
+
+.pixel-habit-card-stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.pixel-habit-card-stats-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+}

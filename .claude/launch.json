@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dzhusshelter-api",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/DzhusShelter.Api/DzhusShelter.Api.csproj"],
+      "port": 54078
+    },
+    {
+      "name": "dzhusshelter-ui",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "src/DzhusShelter.UI/DzhusShelter.UI.csproj"],
+      "port": 5279
+    }
+  ]
+}

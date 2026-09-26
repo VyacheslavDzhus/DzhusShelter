@@ -1,94 +1,26 @@
 @page "/bad-habits"
 @rendermode InteractiveServer
-@using ApexCharts
 @using DzhusShelter.UI.Services
-@inject BadHabitsApiClient ApiClient
 
 <PageTitle>Bad Habits</PageTitle>
 
 <h1>Bad Habits</h1>
 
-<div class="nes-container with-title is-dark" style="margin-top: 1rem;">
-    <p class="title">Фільтри</p>
-    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <label>
-            Від: <input type="date" class="nes-input" @bind="_fromDate" @bind:after="ReloadAsync" />
-        </label>
-        <label>
-            До: <input type="date" class="nes-input" @bind="_toDate" @bind:after="ReloadAsync" />
-        </label>
-        <label>
-            Тип:
-            <select class="nes-select" @bind="_selectedHabitType" @bind:after="ReloadAsync">
-                <option value="">Всі</option>
-                <option value="@HabitType.Smoking">Куріння</option>
-                <option value="@HabitType.Alcohol">Алкоголь</option>
-            </select>
-        </label>
-    </div>
+<div class="bad-habits-grid">
+    <ErrorBoundary>
+        <ChildContent>
+            <PixelHabitCard HabitType="HabitType.Alcohol" Title="Алкоголь" />
+        </ChildContent>
+        <ErrorContent>
+            <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+        </ErrorContent>
+    </ErrorBoundary>
+    <ErrorBoundary>
+        <ChildContent>
+            <PixelHabitCard HabitType="HabitType.Smoking" Title="Куріння" />
+        </ChildContent>
+        <ErrorContent>
+            <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+        </ErrorContent>
+    </ErrorBoundary>
 </div>
-
-<div class="nes-container with-title is-dark" style="margin-top: 1rem;">
-    <p class="title">Графік</p>
-    @if (_entries is null)
-    {
-        <p><em>Завантаження...</em></p>
-    }
-    else if (_entries.Count == 0)
-    {
-        <p>Немає записів за обраний період.</p>
-    }
-    else
-    {
-        @* @key forces Blazor to tear down and recreate the chart whenever the underlying data
-           changes — ApexChart doesn't otherwise pick up a new Items collection reference on its
-           own after the first render (confirmed by hand: changing filters updated the API call
-           but left the chart showing stale data until this was added). *@
-        <ApexChart @key="_renderKey" TItem="DailyCount" Title="Кількість подій за днями">
-            <ApexPointSeries TItem="DailyCount"
-                             Items="_dailyCounts"
-                             Name="Записи"
-                             XValue="e => e.Date"
-                             YValue="e => e.Count"
-                             SeriesType="SeriesType.Bar" />
-        </ApexChart>
-    }
-</div>
-
-@code {
-    private DateTime _fromDate = DateTime.Today.AddDays(-30);
-    private DateTime _toDate = DateTime.Today;
-    private string _selectedHabitType = "";
-    private List<HabitEntryDto>? _entries;
-    private List<DailyCount> _dailyCounts = [];
-    private int _renderKey;
-
-    protected override async Task OnInitializedAsync() => await ReloadAsync();
-
-    private async Task ReloadAsync()
-    {
-        HabitType? habitType = Enum.TryParse<HabitType>(_selectedHabitType, out var parsed) ? parsed : null;
-
-        // DateTime.Today/@bind on <input type="date"> both produce DateTimeKind.Local values —
-        // pairing a Local-kind DateTime with an explicit TimeSpan.Zero offset throws unless the
-        // machine's local offset actually is zero. Treat the date as offset-agnostic instead.
-        var from = DateTime.SpecifyKind(_fromDate, DateTimeKind.Unspecified);
-        var to = DateTime.SpecifyKind(_toDate.AddDays(1).AddTicks(-1), DateTimeKind.Unspecified);
-
-        _entries = await ApiClient.GetEntriesAsync(
-            new DateTimeOffset(from, TimeSpan.Zero),
-            new DateTimeOffset(to, TimeSpan.Zero),
-            habitType,
-            null,
-            CancellationToken.None);
-
-        _dailyCounts = _entries
-            .GroupBy(e => e.OccurredAt.Date)
-            .Select(g => new DailyCount(g.Key, g.Count()))
-            .OrderBy(d => d.Date)
-            .ToList();
-        _renderKey++;
-    }
-
-    private sealed record DailyCount(DateTime Date, int Count);
-}

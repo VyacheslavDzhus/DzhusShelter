@@ -1,0 +1,17 @@
+.pixel-chart-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.pixel-chart-toolbar .nes-btn {
+    padding: 6px 10px;
+    line-height: 0;
+}
+
+.pixel-chart-empty {
+    text-align: center;
+    color: #cccccc;
+    text-shadow: 1px 1px 0px #000;
+}

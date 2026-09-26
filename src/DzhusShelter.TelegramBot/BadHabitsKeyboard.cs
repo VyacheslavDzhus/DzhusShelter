@@ -6,13 +6,23 @@ public enum HabitType
     Alcohol = 2,
 }
 
+// Posted to the Api via PostAsJsonAsync with default System.Text.Json options (no
+// JsonStringEnumConverter), so these serialize as raw integers, not names. The numeric
+// values here must stay identical to DzhusShelter.Api's copy
+// (src/DzhusShelter.Api/Domain/BadHabits/HabitSubType.cs) — check that file before renumbering.
 public enum HabitSubType
 {
     Cigarette = 1,
     Vape = 2,
     Beer = 3,
     Wine = 4,
-    Spirits = 5,
+    Iqos = 6,
+    Hookah = 7,
+    Vodka = 8,
+    Whiskey = 9,
+    Rum = 10,
+    Gin = 11,
+    Martini = 12,
 }
 
 public static class BadHabitsKeyboard
@@ -29,11 +39,47 @@ public static class BadHabitsKeyboard
 
     private static readonly Dictionary<HabitType, HabitSubType[]> SubTypesByHabitType = new()
     {
-        [HabitType.Smoking] = [HabitSubType.Cigarette, HabitSubType.Vape],
-        [HabitType.Alcohol] = [HabitSubType.Beer, HabitSubType.Wine, HabitSubType.Spirits],
+        [HabitType.Smoking] = [HabitSubType.Cigarette, HabitSubType.Vape, HabitSubType.Iqos, HabitSubType.Hookah],
+        [HabitType.Alcohol] = [HabitSubType.Beer, HabitSubType.Wine, HabitSubType.Vodka, HabitSubType.Whiskey, HabitSubType.Rum, HabitSubType.Gin, HabitSubType.Martini],
+    };
+
+    private static readonly Dictionary<HabitSubType, string> DisplayNames = new()
+    {
+        [HabitSubType.Cigarette] = "Цигарки",
+        [HabitSubType.Vape] = "Вейп",
+        [HabitSubType.Iqos] = "Айкос",
+        [HabitSubType.Hookah] = "Кальян",
+        [HabitSubType.Beer] = "Пиво",
+        [HabitSubType.Wine] = "Вино",
+        [HabitSubType.Vodka] = "Горілка",
+        [HabitSubType.Whiskey] = "Віскі",
+        [HabitSubType.Rum] = "Ром",
+        [HabitSubType.Gin] = "Джин",
+        [HabitSubType.Martini] = "Мартіні",
+    };
+
+    private static readonly Dictionary<HabitSubType, string> Emojis = new()
+    {
+        [HabitSubType.Cigarette] = "😬",
+        [HabitSubType.Vape] = "💨",
+        [HabitSubType.Iqos] = "🔥",
+        [HabitSubType.Hookah] = "🌬️",
+        [HabitSubType.Beer] = "🍺",
+        [HabitSubType.Wine] = "🍷",
+        [HabitSubType.Vodka] = "🍶",
+        [HabitSubType.Whiskey] = "🥃",
+        [HabitSubType.Rum] = "🏴‍☠️",
+        [HabitSubType.Gin] = "🌿",
+        [HabitSubType.Martini] = "🍸",
     };
 
     public static IReadOnlyList<HabitSubType> SubTypesFor(HabitType habitType) => SubTypesByHabitType[habitType];
+
+    public static string DisplayName(HabitSubType subType) => DisplayNames[subType];
+
+    public static string Emoji(HabitSubType subType) => Emojis[subType];
+
+    public static string DisplayNameWithEmoji(HabitSubType subType) => $"{Emoji(subType)} {DisplayName(subType)}";
 
     public static string HabitTypeCallbackData(HabitType habitType) => $"{HabitTypePrefix}{(int)habitType}";
 

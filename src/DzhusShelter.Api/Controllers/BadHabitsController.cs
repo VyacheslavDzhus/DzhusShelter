@@ -11,11 +11,11 @@ namespace DzhusShelter.Api.Controllers;
 [Route("api/bad-habits")]
 public sealed class BadHabitsController : ControllerBase
 {
-    private readonly ICommandHandler<LogHabitEntryCommand, Result<Guid>> _logHandler;
+    private readonly ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>> _logHandler;
     private readonly IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>> _getHandler;
 
     public BadHabitsController(
-        ICommandHandler<LogHabitEntryCommand, Result<Guid>> logHandler,
+        ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>> logHandler,
         IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>> getHandler)
     {
         _logHandler = logHandler;
@@ -27,7 +27,7 @@ public sealed class BadHabitsController : ControllerBase
     {
         var result = await _logHandler.Handle(command, cancellationToken);
         return result.IsSuccess
-            ? Created(string.Empty, new { id = result.Value })
+            ? Ok(new { id = result.Value.Id, alreadyLogged = result.Value.AlreadyLogged })
             : BadRequest(new { error = result.Error.Message });
     }
 

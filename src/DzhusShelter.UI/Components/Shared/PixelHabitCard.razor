@@ -1,0 +1,187 @@
+@using DzhusShelter.UI.Services
+@inject BadHabitsApiClient ApiClient
+
+<PixelCard Title="@Title">
+    <div class="pixel-habit-card-filter">
+        <label>
+            Підтип:
+            <select class="nes-select" @bind="_selectedSubTypeRaw" @bind:after="ReloadAsync">
+                <option value="">Всі</option>
+                @foreach (var subType in HabitSubTypeCatalog.SubTypesFor(HabitType))
+                {
+                    <option value="@subType">@HabitSubTypeCatalog.DisplayName(subType)</option>
+                }
+            </select>
+        </label>
+    </div>
+
+    <div class="pixel-habit-card-month-nav">
+        <button type="button" class="nes-btn" @onclick="GoToPreviousMonth">◀</button>
+        <span class="pixel-habit-card-month-label">@MonthNames[_viewMonth - 1] @_viewYear</span>
+        <button type="button" class="nes-btn" @onclick="GoToNextMonth">▶</button>
+    </div>
+
+    @if (_entries is null)
+    {
+        <p><em>Завантаження...</em></p>
+    }
+    else
+    {
+        <PixelMonthCalendar Year="_viewYear" Month="_viewMonth" MarkedDays="_markedDays" />
+
+        <div class="pixel-habit-card-stats-period">
+            <label>
+                Період:
+                <select class="nes-select" @bind="_statsPeriod" @bind:after="ReloadAsync">
+                    <option value="@StatsPeriod.ThisMonth">Цей місяць</option>
+                    <option value="@StatsPeriod.ThreeMonths">3 місяці</option>
+                    <option value="@StatsPeriod.Year">Рік</option>
+                    <option value="@StatsPeriod.Custom">Свій період</option>
+                </select>
+            </label>
+            @if (_statsPeriod == StatsPeriod.Custom)
+            {
+                <label>
+                    Від: <input type="date" class="nes-input" @bind="_customFrom" @bind:after="ReloadAsync" />
+                </label>
+                <label>
+                    До: <input type="date" class="nes-input" @bind="_customTo" @bind:after="ReloadAsync" />
+                </label>
+            }
+        </div>
+
+        @if (_stats.Count == 0)
+        {
+            <p>Немає даних за обраний період.</p>
+        }
+        else
+        {
+            <ul class="pixel-habit-card-stats-list">
+                @foreach (var stat in _stats)
+                {
+                    <li>
+                        @((MarkupString)HabitSubTypeCatalog.IconSvg(stat.SubType)) @HabitSubTypeCatalog.DisplayName(stat.SubType) ×@stat.Count
+                    </li>
+                }
+            </ul>
+        }
+    }
+</PixelCard>
+
+@code {
+    private static readonly string[] MonthNames =
+    [
+        "Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень",
+        "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень",
+    ];
+
+    [Parameter, EditorRequired] public HabitType HabitType { get; set; }
+    [Parameter, EditorRequired] public string Title { get; set; } = string.Empty;
+
+    private enum StatsPeriod
+    {
+        ThisMonth,
+        ThreeMonths,
+        Year,
+        Custom,
+    }
+
+    private string _selectedSubTypeRaw = "";
+    private int _viewYear = DateTime.UtcNow.Year;
+    private int _viewMonth = DateTime.UtcNow.Month;
+    private List<HabitEntryDto>? _entries;
+    private Dictionary<DateOnly, MarkupString> _markedDays = new();
+    private StatsPeriod _statsPeriod = StatsPeriod.ThisMonth;
+    private DateTime _customFrom = DateTime.UtcNow.Date.AddMonths(-1);
+    private DateTime _customTo = DateTime.UtcNow.Date;
+    private List<(HabitSubType SubType, int Count)> _stats = [];
+    private int _loadVersion;
+
+    private HabitSubType? SelectedSubType =>
+        Enum.TryParse<HabitSubType>(_selectedSubTypeRaw, out var parsed) ? parsed : null;
+
+    protected override async Task OnInitializedAsync() => await ReloadAsync();
+
+    private async Task GoToPreviousMonth()
+    {
+        _viewMonth--;
+        if (_viewMonth < 1)
+        {
+            _viewMonth = 12;
+            _viewYear--;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task GoToNextMonth()
+    {
+        _viewMonth++;
+        if (_viewMonth > 12)
+        {
+            _viewMonth = 1;
+            _viewYear++;
+        }
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        var version = ++_loadVersion;
+
+        var monthStart = new DateTimeOffset(new DateTime(_viewYear, _viewMonth, 1), TimeSpan.Zero);
+        var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+        var (statsFrom, statsTo) = GetStatsRange();
+
+        var rangeFrom = monthStart < statsFrom ? monthStart : statsFrom;
+        var rangeTo = monthEnd > statsTo ? monthEnd : statsTo;
+
+        var entries = await ApiClient.GetEntriesAsync(rangeFrom, rangeTo, HabitType, SelectedSubType, CancellationToken.None);
+        if (version != _loadVersion)
+        {
+            return;
+        }
+
+        _entries = entries;
+        _markedDays = BuildMarkedDays(_entries.Where(e => e.OccurredAt >= monthStart && e.OccurredAt <= monthEnd));
+        _stats = ComputeStats(_entries, statsFrom, statsTo);
+    }
+
+    private (DateTimeOffset From, DateTimeOffset To) GetStatsRange()
+    {
+        var today = DateTime.UtcNow.Date;
+        return _statsPeriod switch
+        {
+            StatsPeriod.ThisMonth => (new DateTimeOffset(new DateTime(today.Year, today.Month, 1), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.ThreeMonths => (new DateTimeOffset(today.AddMonths(-3), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.Year => (new DateTimeOffset(today.AddYears(-1), TimeSpan.Zero), DateTimeOffset.UtcNow),
+            StatsPeriod.Custom => (
+                new DateTimeOffset(DateTime.SpecifyKind(_customFrom, DateTimeKind.Unspecified), TimeSpan.Zero),
+                new DateTimeOffset(DateTime.SpecifyKind(_customTo, DateTimeKind.Unspecified).AddDays(1).AddTicks(-1), TimeSpan.Zero)),
+            _ => throw new ArgumentOutOfRangeException(),
+        };
+    }
+
+    private static List<(HabitSubType SubType, int Count)> ComputeStats(IEnumerable<HabitEntryDto> entries, DateTimeOffset from, DateTimeOffset to) =>
+        entries
+            .Where(e => e.OccurredAt >= from && e.OccurredAt <= to)
+            .GroupBy(e => e.SubType)
+            .Select(g => (SubType: g.Key, Count: g.Count()))
+            .OrderByDescending(s => s.Count)
+            .ThenBy(s => s.SubType)
+            .ToList();
+
+    private static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
+    {
+        var result = new Dictionary<DateOnly, MarkupString>();
+        foreach (var group in entries.GroupBy(e => DateOnly.FromDateTime(e.OccurredAt.UtcDateTime.Date)))
+        {
+            var distinctSubTypes = group.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
+            var primaryIcon = HabitSubTypeCatalog.IconSvg(distinctSubTypes[0]);
+            var markup = distinctSubTypes.Count > 1
+                ? $"<div class=\"pixel-calendar-marker\">{primaryIcon}<span class=\"pixel-calendar-plus\">+</span></div>"
+                : $"<div class=\"pixel-calendar-marker\">{primaryIcon}</div>";
+            result[group.Key] = new MarkupString(markup);
+        }
+        return result;
+    }
+}
