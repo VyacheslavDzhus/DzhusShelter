@@ -1,0 +1,28 @@
+@using DzhusShelter.UI.Services
+@inject BadHabitsApiClient ApiClient
+
+<PixelCard Title="Погані звички">
+    @if (_markedDays is null)
+    {
+        <p><em>Завантаження...</em></p>
+    }
+    else
+    {
+        <PixelMonthCalendar Year="_year" Month="_month" MarkedDays="_markedDays" />
+    }
+</PixelCard>
+
+@code {
+    private readonly int _year = DateTime.UtcNow.Year;
+    private readonly int _month = DateTime.UtcNow.Month;
+    private Dictionary<DateOnly, MarkupString>? _markedDays;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var monthStart = new DateTimeOffset(new DateTime(_year, _month, 1), TimeSpan.Zero);
+        var monthEnd = monthStart.AddMonths(1).AddTicks(-1);
+
+        var entries = await ApiClient.GetEntriesAsync(monthStart, monthEnd, null, null, CancellationToken.None);
+        _markedDays = HabitSubTypeCatalog.BuildMarkedDays(entries);
+    }
+}

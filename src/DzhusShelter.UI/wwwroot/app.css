@@ -77,3 +77,51 @@ h1:focus {
     color: #ffcc00;
     text-shadow: 1px 1px 0px #000;
 }
+
+.pixel-calendar-marker-wrap {
+    position: relative;
+    outline: none;
+    cursor: pointer;
+}
+
+.pixel-calendar-popup {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 4px;
+    background-color: #1a1a1c;
+    border: 1px solid #5e5e62;
+    padding: 4px 6px;
+    white-space: nowrap;
+    z-index: 10;
+    box-shadow: 2px 2px 0px #000;
+}
+
+.pixel-calendar-marker-wrap:hover .pixel-calendar-popup,
+.pixel-calendar-marker-wrap:focus .pixel-calendar-popup,
+.pixel-calendar-marker-wrap:focus-within .pixel-calendar-popup {
+    display: block;
+}
+
+.pixel-calendar-popup-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-size: 9px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.pixel-calendar-popup-list li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pixel-calendar-popup-list svg {
+    width: 10px;
+    height: 10px;
+}

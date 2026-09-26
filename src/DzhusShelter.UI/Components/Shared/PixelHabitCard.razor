@@ -142,7 +142,7 @@
         }
 
         _entries = entries;
-        _markedDays = BuildMarkedDays(_entries.Where(e => e.OccurredAt >= monthStart && e.OccurredAt <= monthEnd));
+        _markedDays = HabitSubTypeCatalog.BuildMarkedDays(_entries.Where(e => e.OccurredAt >= monthStart && e.OccurredAt <= monthEnd));
         _stats = ComputeStats(_entries, statsFrom, statsTo);
     }
 
@@ -169,19 +169,4 @@
             .OrderByDescending(s => s.Count)
             .ThenBy(s => s.SubType)
             .ToList();
-
-    private static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
-    {
-        var result = new Dictionary<DateOnly, MarkupString>();
-        foreach (var group in entries.GroupBy(e => DateOnly.FromDateTime(e.OccurredAt.UtcDateTime.Date)))
-        {
-            var distinctSubTypes = group.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
-            var primaryIcon = HabitSubTypeCatalog.IconSvg(distinctSubTypes[0]);
-            var markup = distinctSubTypes.Count > 1
-                ? $"<div class=\"pixel-calendar-marker\">{primaryIcon}<span class=\"pixel-calendar-plus\">+</span></div>"
-                : $"<div class=\"pixel-calendar-marker\">{primaryIcon}</div>";
-            result[group.Key] = new MarkupString(markup);
-        }
-        return result;
-    }
 }

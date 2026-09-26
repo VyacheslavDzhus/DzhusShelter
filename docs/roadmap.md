@@ -105,6 +105,29 @@ Candidate applications in this repo, in suggested order (simple first):
 
 Not decided yet — pick one when starting, write a spec in `docs/specs/` first.
 
+## Backlog of next-step ideas (not yet chosen)
+
+Brainstormed 2026-09-26, none picked yet — pick one and brainstorm it properly (spec first for anything non-trivial) when ready.
+
+**Deepen Bad Habits further (no new feature, just quality):**
+- Move the marked-day icon/badge markup into `PixelMonthCalendar` itself (currently `PixelHabitCard` hand-builds it as a raw string, which is why the earlier CSS-scoping bug happened) — do this before a second `PixelMonthCalendar` consumer shows up
+- `PersistentComponentState` to stop `PixelHabitCard` fetching twice on first load (prerender + interactive circuit)
+- Auth between bot/Blazor/API — still the one open item in [architecture.md](architecture.md)'s Security section; fine as long as nothing is exposed beyond the private CasaOS network
+
+**Bring another mockup feature to life** (everything except Bad Habits in [docs/specs/](specs/README.md) is still status "Mockup"):
+- **Gym** — natural next pick per the progression table above: same Clean Architecture shape, simple CRUD, and `PixelChart` is already built generic and waiting for a second consumer
+- **Finance** — Monobank API integration behind a resilient HTTP client (Polly retry) + FluentValidation
+- **Screen Time** — first externally-callable ingest endpoint (something other than the user writes to it) — natural forcing function for auth/rate limiting
+
+**Deliberately exercise a curriculum topic not yet touched:**
+- **Outbox/Inbox** — already committed to above; the 2026-09-23 incident (bot couldn't reach `api`, entry got silently lost) is a concrete, motivating real bug for an idempotent-retry Inbox
+- **Redis / distributed caching** — next step after CQRS in the curriculum path
+- **Structured logging / observability** (Serilog → Grafana/Prometheus/OpenTelemetry) — the project currently has no logging beyond console output
+
+**Small but useful, not tied to a curriculum topic:**
+- Automated daily Postgres backup on CasaOS (cron + `pg_dump`, per [casaos-runbook.md](casaos-runbook.md)) — offered during the Phase 1 disaster-recovery discussion, never actioned
+- This file's Progress log (below) hasn't been updated since 2026-09-21 despite the CI/CD pipeline, the CQRS folder split, the dedup business rule, and the calendar/stats Blazor components built since — worth a catch-up entry
+
 ## Progress log
 
 Update this as topics get exercised for real (not just discussed):

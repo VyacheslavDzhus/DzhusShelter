@@ -1,0 +1,14 @@
+.dashboard-category {
+    margin-top: 2rem;
+}
+
+.dashboard-category-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.dashboard-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
