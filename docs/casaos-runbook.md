@@ -87,3 +87,11 @@ docker run --rm -v dzhusshelter_postgres-data:/data -v ~/backups:/backup alpine 
 - `.env` must have no BOM and no spaces around `=`. A file that "looks" correct when you `cat` it can still fail — always verify with `docker compose config`, not by eyeballing `.env`.
 - Host port `8080` is taken by zigbee2mqtt on this specific server — that's why `ui` uses `8082`.
 - `docker` commands need `sudo` unless you've run `sudo usermod -aG docker $USER` and logged back in.
+- **Retiring a `HabitSubType` (or `HabitType`) enum value breaks the web UI for any row still storing the old string, but only that one card/query — it doesn't crash the whole app.** Hit once on 2026-09-26 when `Spirits` was retired (replaced by `Vodka`/`Whiskey`/`Rum`/`Gin`/`Martini`) but one real logged entry from 2026-09-23 still had `SubType='Spirits'` in Postgres (`SubType` is a string column via EF's `HasConversion<string>()`) — the Alcohol card's `PixelHabitCard` failed to deserialize that row and showed the `<ErrorBoundary>` fallback ("Не вдалося завантажити дані..."), while the Smoking card kept working fine. Fix was a one-line data migration, no restart needed:
+  ```bash
+  sudo docker compose exec postgres psql -U postgres dzhusshelter -c "UPDATE \"HabitEntries\" SET \"SubType\"='Vodka' WHERE \"SubType\"='Spirits';"
+  ```
+  Before ever retiring another subtype value, check for existing rows using it first:
+  ```bash
+  sudo docker compose exec postgres psql -U postgres dzhusshelter -c "SELECT \"SubType\", count(*) FROM \"HabitEntries\" GROUP BY \"SubType\";"
+  ```
