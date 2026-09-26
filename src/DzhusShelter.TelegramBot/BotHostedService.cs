@@ -15,6 +15,8 @@ public sealed class TelegramBotSettings
 
 public sealed class BotHostedService : BackgroundService
 {
+    private const string StartLoggingButtonText = "▶️ Почати фіксування";
+
     private readonly ITelegramBotClient _botClient;
     private readonly BadHabitsApiClient _apiClient;
     private readonly long _allowedChatId;
@@ -41,7 +43,7 @@ public sealed class BotHostedService : BackgroundService
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is { Text: "/start" } message && message.Chat.Id == _allowedChatId)
+        if (update.Message is { Text: "/start" or StartLoggingButtonText } message && message.Chat.Id == _allowedChatId)
         {
             await SendRootMenuAsync(message.Chat.Id, cancellationToken);
             return;
@@ -55,6 +57,20 @@ public sealed class BotHostedService : BackgroundService
 
     private async Task SendRootMenuAsync(long chatId, CancellationToken cancellationToken)
     {
+        // Sent as a *reply* keyboard (not inline) so it stays pinned below the text input across
+        // the whole conversation, not just attached to this one message — the point is to give
+        // the user a persistent "start" button so they never have to type /start again.
+        var persistentKeyboard = new ReplyKeyboardMarkup(new KeyboardButton(StartLoggingButtonText))
+        {
+            ResizeKeyboard = true,
+            IsPersistent = true,
+        };
+        await _botClient.SendMessage(
+            chatId,
+            $"Кнопка \"{StartLoggingButtonText}\" тепер завжди під рукою — більше не треба писати /start.",
+            replyMarkup: persistentKeyboard,
+            cancellationToken: cancellationToken);
+
         var keyboard = new InlineKeyboardMarkup(
             InlineKeyboardButton.WithCallbackData("🚫 Шкідливі звички", BadHabitsKeyboard.OpenMenuCallbackData));
 
@@ -89,7 +105,7 @@ public sealed class BotHostedService : BackgroundService
         {
             var buttons = BadHabitsKeyboard.SubTypesFor(habitType.Value)
                 .Select(subType => InlineKeyboardButton.WithCallbackData(
-                    BadHabitsKeyboard.DisplayName(subType), BadHabitsKeyboard.SubTypeCallbackData(habitType.Value, subType)))
+                    BadHabitsKeyboard.DisplayNameWithEmoji(subType), BadHabitsKeyboard.SubTypeCallbackData(habitType.Value, subType)))
                 .ToArray();
             // Chunk into rows of 3 so long Cyrillic labels (e.g. all 7 alcohol subtypes) don't
             // get crammed into a single unreadable row on a phone screen.
@@ -105,7 +121,7 @@ public sealed class BotHostedService : BackgroundService
         {
             var (parsedHabitType, subType) = subTypeSelection.Value;
             var outcome = await _apiClient.LogEntryAsync(parsedHabitType, subType, cancellationToken);
-            var label = BadHabitsKeyboard.DisplayName(subType);
+            var label = BadHabitsKeyboard.DisplayNameWithEmoji(subType);
 
             var message = outcome switch
             {

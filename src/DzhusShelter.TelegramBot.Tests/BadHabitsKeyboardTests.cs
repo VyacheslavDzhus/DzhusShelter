@@ -63,6 +63,31 @@ public class BadHabitsKeyboardTests
         BadHabitsKeyboard.DisplayName(subType).Should().Be(expectedLabel);
     }
 
+    [Theory]
+    [InlineData(HabitSubType.Cigarette, "😬")]
+    [InlineData(HabitSubType.Vape, "💨")]
+    [InlineData(HabitSubType.Iqos, "🔥")]
+    [InlineData(HabitSubType.Hookah, "🌬️")]
+    [InlineData(HabitSubType.Beer, "🍺")]
+    [InlineData(HabitSubType.Wine, "🍷")]
+    [InlineData(HabitSubType.Vodka, "🍶")]
+    [InlineData(HabitSubType.Whiskey, "🥃")]
+    [InlineData(HabitSubType.Rum, "🏴‍☠️")]
+    [InlineData(HabitSubType.Gin, "🌿")]
+    [InlineData(HabitSubType.Martini, "🍸")]
+    public void Emoji_ReturnsExpectedEmoji(HabitSubType subType, string expectedEmoji)
+    {
+        BadHabitsKeyboard.Emoji(subType).Should().Be(expectedEmoji);
+    }
+
+    [Theory]
+    [InlineData(HabitSubType.Beer, "🍺 Пиво")]
+    [InlineData(HabitSubType.Cigarette, "😬 Цигарки")]
+    public void DisplayNameWithEmoji_CombinesEmojiAndLabel(HabitSubType subType, string expected)
+    {
+        BadHabitsKeyboard.DisplayNameWithEmoji(subType).Should().Be(expected);
+    }
+
     [Fact]
     public void TryParseHabitType_WithUnrelatedCallbackData_ReturnsNull()
     {

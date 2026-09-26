@@ -58,9 +58,28 @@ public static class BadHabitsKeyboard
         [HabitSubType.Martini] = "Мартіні",
     };
 
+    private static readonly Dictionary<HabitSubType, string> Emojis = new()
+    {
+        [HabitSubType.Cigarette] = "😬",
+        [HabitSubType.Vape] = "💨",
+        [HabitSubType.Iqos] = "🔥",
+        [HabitSubType.Hookah] = "🌬️",
+        [HabitSubType.Beer] = "🍺",
+        [HabitSubType.Wine] = "🍷",
+        [HabitSubType.Vodka] = "🍶",
+        [HabitSubType.Whiskey] = "🥃",
+        [HabitSubType.Rum] = "🏴‍☠️",
+        [HabitSubType.Gin] = "🌿",
+        [HabitSubType.Martini] = "🍸",
+    };
+
     public static IReadOnlyList<HabitSubType> SubTypesFor(HabitType habitType) => SubTypesByHabitType[habitType];
 
     public static string DisplayName(HabitSubType subType) => DisplayNames[subType];
+
+    public static string Emoji(HabitSubType subType) => Emojis[subType];
+
+    public static string DisplayNameWithEmoji(HabitSubType subType) => $"{Emoji(subType)} {DisplayName(subType)}";
 
     public static string HabitTypeCallbackData(HabitType habitType) => $"{HabitTypePrefix}{(int)habitType}";
 
