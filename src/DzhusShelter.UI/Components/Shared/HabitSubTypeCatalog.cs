@@ -1,4 +1,5 @@
 using DzhusShelter.UI.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace DzhusShelter.UI.Components.Shared;
 
@@ -106,4 +107,19 @@ public static class HabitSubTypeCatalog
     public static string DisplayName(HabitSubType subType) => DisplayNames[subType];
 
     public static string IconSvg(HabitSubType subType) => Icons[subType];
+
+    public static Dictionary<DateOnly, MarkupString> BuildMarkedDays(IEnumerable<HabitEntryDto> entries)
+    {
+        var result = new Dictionary<DateOnly, MarkupString>();
+        foreach (var group in entries.GroupBy(e => DateOnly.FromDateTime(e.OccurredAt.UtcDateTime.Date)))
+        {
+            var distinctSubTypes = group.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
+            var primaryIcon = IconSvg(distinctSubTypes[0]);
+            var markup = distinctSubTypes.Count > 1
+                ? $"<div class=\"pixel-calendar-marker\">{primaryIcon}<span class=\"pixel-calendar-plus\">+</span></div>"
+                : $"<div class=\"pixel-calendar-marker\">{primaryIcon}</div>";
+            result[group.Key] = new MarkupString(markup);
+        }
+        return result;
+    }
 }
