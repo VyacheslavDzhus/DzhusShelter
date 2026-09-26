@@ -113,11 +113,23 @@ public static class HabitSubTypeCatalog
         var result = new Dictionary<DateOnly, MarkupString>();
         foreach (var group in entries.GroupBy(e => DateOnly.FromDateTime(e.OccurredAt.UtcDateTime.Date)))
         {
-            var distinctSubTypes = group.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
+            var dayEntries = group.ToList();
+            var distinctSubTypes = dayEntries.Select(e => e.SubType).Distinct().OrderBy(s => (int)s).ToList();
             var primaryIcon = IconSvg(distinctSubTypes[0]);
-            var markup = distinctSubTypes.Count > 1
+            var markerMarkup = distinctSubTypes.Count > 1
                 ? $"<div class=\"pixel-calendar-marker\">{primaryIcon}<span class=\"pixel-calendar-plus\">+</span></div>"
                 : $"<div class=\"pixel-calendar-marker\">{primaryIcon}</div>";
+
+            var subTypeCounts = dayEntries
+                .GroupBy(e => e.SubType)
+                .Select(g => (SubType: g.Key, Count: g.Count()))
+                .OrderByDescending(s => s.Count)
+                .ThenBy(s => (int)s.SubType);
+            var popupItems = string.Concat(subTypeCounts.Select(s =>
+                $"<li>{IconSvg(s.SubType)} {DisplayName(s.SubType)} ×{s.Count}</li>"));
+            var popupMarkup = $"<div class=\"pixel-calendar-popup\"><ul class=\"pixel-calendar-popup-list\">{popupItems}</ul></div>";
+
+            var markup = $"<div class=\"pixel-calendar-marker-wrap\" tabindex=\"0\">{markerMarkup}{popupMarkup}</div>";
             result[group.Key] = new MarkupString(markup);
         }
         return result;
