@@ -8,6 +8,7 @@ This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md)
 
 | Feature | Route | Spec | Status |
 |---|---|---|---|
+| Home | `/` | [home.md](home.md) | Spec'd |
 | Finance | `/finance` | [finance.md](finance.md) | Mockup |
 | Exchange | `/exchange` | [exchange.md](exchange.md) | Mockup |
 | Gym | `/gym` | [gym.md](gym.md) | Mockup |
