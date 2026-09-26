@@ -1,6 +1,6 @@
 # Home
 
-**Route:** `/` · **Status:** Mockup → being rebuilt as a real dashboard · **Architecture:** [docs/architecture.md](../architecture.md)
+**Route:** `/` · **Status:** Implemented · **Architecture:** [docs/architecture.md](../architecture.md)
 
 ## Overview
 
