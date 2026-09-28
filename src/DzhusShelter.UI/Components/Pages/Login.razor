@@ -22,22 +22,6 @@
     </EditForm>
 </div>
 
-<style>
-    .login-container {
-        display: flex;
-        justify-content: center;
-        margin-top: 4rem;
-    }
-
-    .login-field {
-        margin-bottom: 1rem;
-    }
-
-    .login-error {
-        color: #e76e55;
-    }
-</style>
-
 @code {
     [SupplyParameterFromForm]
     private LoginModel Model { get; set; } = new();
@@ -51,8 +35,15 @@
 
     private async Task HandleLoginAsync()
     {
-        var token = await AuthApiClient.LoginAsync(Model.Password, CancellationToken.None);
-        if (token is null)
+        var result = await AuthApiClient.LoginAsync(Model.Password, CancellationToken.None);
+
+        if (result.Outcome == LoginOutcome.TooManyAttempts)
+        {
+            _error = "Забагато спроб. Спробуйте через хвилину.";
+            return;
+        }
+
+        if (result.Outcome != LoginOutcome.Success || result.Token is null)
         {
             _error = "Невірний пароль.";
             return;
@@ -60,7 +51,7 @@
 
         var httpContext = HttpContextAccessor.HttpContext
             ?? throw new InvalidOperationException("Login must be handled during a static (non-interactive) request.");
-        AuthCookieService.SetToken(httpContext, token);
+        AuthCookieService.SetToken(httpContext, result.Token);
 
         // forceLoad: a fresh full-page request, so the browser is guaranteed to send the
         // cookie just set above on the very next navigation.

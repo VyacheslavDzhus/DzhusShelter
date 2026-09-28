@@ -1,0 +1,13 @@
+.login-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 4rem;
+}
+
+.login-field {
+    margin-bottom: 1rem;
+}
+
+.login-error {
+    color: #e76e55;
+}

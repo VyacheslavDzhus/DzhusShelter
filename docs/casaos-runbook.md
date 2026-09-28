@@ -49,8 +49,12 @@ python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 Generate `ADMIN_PASSWORD_HASH` as a bcrypt hash of your chosen dashboard password — never store the plaintext:
 ```bash
 pip install bcrypt
-python3 -c "import bcrypt; print(bcrypt.hashpw(b'your-chosen-password', bcrypt.gensalt()).decode().replace('\$', '\$\$'))"
+python3 -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass().encode(), bcrypt.gensalt()).decode().replace('\$', '\$\$'))"
 ```
+(If `pip install bcrypt` fails with an "externally managed environment" error — common on Debian/Ubuntu 12+, PEP 668 — `apt install python3-bcrypt` is the alternative that doesn't need `pip` at all.)
+
+This prompts for the password interactively instead of taking it as a command-line literal — embedding the plaintext directly in the command would leave it sitting in `~/.bash_history` and visible to other processes via `ps` while it runs.
+
 The `$$` (not a typo) is required because Docker Compose's `.env` parser treats a bare `$` as a variable reference — bcrypt hashes always contain literal `$` characters, so pasting one in unescaped silently corrupts it and breaks login.
 
 ## Protecting the Postgres volume (important!)

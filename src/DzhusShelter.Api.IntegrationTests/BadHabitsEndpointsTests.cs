@@ -98,4 +98,15 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
 
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
+
+    [Fact]
+    public async Task GetEntries_WithInvalidApiKey_ReturnsUnauthorized()
+    {
+        using var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Api-Key", "this-is-not-a-real-key");
+
+        var response = await client.GetAsync("/api/bad-habits/entries");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }
