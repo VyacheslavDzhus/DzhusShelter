@@ -20,6 +20,14 @@ This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md)
 
 Statuses: **Mockup** (current, hardcoded UI) → **Spec'd** (spec written, decisions resolved) → **Implemented** (real data/logic shipped).
 
+## Cross-cutting specs
+
+Not a page/route — infrastructure and behavior that applies across features.
+
+| Spec | Status |
+|---|---|
+| [public-access-and-auth.md](public-access-and-auth.md) | Spec'd |
+
 ## Cross-feature open decisions
 
 These affect multiple specs and aren't resolved yet — each spec below flags where it's blocked on one of these:

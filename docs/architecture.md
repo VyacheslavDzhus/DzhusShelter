@@ -37,6 +37,8 @@ Standard four-layer split (roadmap topic 4):
 
 No authentication between the bot, Blazor, and the API yet — that's roadmap topic 12, done properly later (JWT/OAuth), not bolted on piecemeal now. This is only acceptable under one condition, which every deployment of this architecture must honor: **`DzhusShelter.Api`'s port is never exposed outside the private Docker network** (bot, UI, and API all reach each other over the internal `docker-compose` network on the CasaOS host — see `deploy-dzhus-shelter` skill). If a public-facing use case ever requires exposing the API directly, auth must be added first — don't defer both at once.
 
+**Update:** that public-facing use case has arrived (iOS Shortcuts pushing data in, dashboard reachable outside the LAN) — see [docs/specs/public-access-and-auth.md](specs/public-access-and-auth.md) for the JWT (UI) + per-client API key (bot/Shortcuts) design that satisfies this section's precondition before `Api` and `UI` go public via Cloudflare Tunnel. This doc's own rule gets updated to reflect the implemented shape once that spec ships, not before.
+
 ## Testing
 
 - Unit tests (xUnit + FluentAssertions) for domain invariants and command/query handlers, mocking `Infrastructure`.
