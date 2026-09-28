@@ -1,6 +1,6 @@
 # Public Access & Auth
 
-**Route:** n/a (cross-cutting, not a page) · **Status:** Spec'd · **Architecture:** [docs/architecture.md](../architecture.md)
+**Route:** n/a (cross-cutting, not a page) · **Status:** Implemented · **Architecture:** [docs/architecture.md](../architecture.md)
 
 ## Overview
 

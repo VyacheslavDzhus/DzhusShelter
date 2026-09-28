@@ -26,7 +26,7 @@ Not a page/route — infrastructure and behavior that applies across features.
 
 | Spec | Status |
 |---|---|
-| [public-access-and-auth.md](public-access-and-auth.md) | Spec'd |
+| [public-access-and-auth.md](public-access-and-auth.md) | Implemented |
 
 ## Cross-feature open decisions
 
