@@ -27,9 +27,28 @@ public sealed class LoginCommandHandler : ICommandHandler<LoginCommand, Result<s
             return Result.Failure<string>(InvalidCredentials);
 
         var passwordHash = _configuration["Auth:AdminPasswordHash"];
-        if (string.IsNullOrEmpty(passwordHash) || !BCrypt.Net.BCrypt.Verify(command.Password, passwordHash))
+        if (!PasswordMatches(command.Password, passwordHash))
             return Result.Failure<string>(InvalidCredentials);
 
         return Result.Success(_tokenGenerator.GenerateToken());
+    }
+
+    private static bool PasswordMatches(string password, string? passwordHash)
+    {
+        if (string.IsNullOrEmpty(passwordHash))
+            return false;
+
+        try
+        {
+            // BCrypt.Verify throws (e.g. SaltParseException) instead of returning false when
+            // passwordHash isn't a well-formed bcrypt hash — a misconfigured Auth:AdminPasswordHash
+            // (typo, leftover placeholder, wrong format) must fail the same way as a wrong
+            // password, not surface as a distinguishable 500 that leaks "this is a config bug".
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }
