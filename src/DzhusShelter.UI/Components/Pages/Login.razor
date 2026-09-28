@@ -8,11 +8,11 @@
 <PageTitle>Вхід — Dzhus Shelter</PageTitle>
 
 <div class="login-container">
-    <EditForm Model="_model" OnValidSubmit="HandleLoginAsync" FormName="login">
+    <EditForm Model="Model" OnValidSubmit="HandleLoginAsync" FormName="login">
         <DataAnnotationsValidator />
         <div class="login-field">
             <label for="password">Пароль</label>
-            <InputText id="password" type="password" class="nes-input" @bind-Value="_model.Password" />
+            <InputText id="password" type="password" class="nes-input" @bind-Value="Model.Password" />
         </div>
         @if (_error is not null)
         {
@@ -39,7 +39,9 @@
 </style>
 
 @code {
-    private readonly LoginModel _model = new();
+    [SupplyParameterFromForm]
+    private LoginModel Model { get; set; } = new();
+
     private string? _error;
 
     private sealed class LoginModel
@@ -49,7 +51,7 @@
 
     private async Task HandleLoginAsync()
     {
-        var token = await AuthApiClient.LoginAsync(_model.Password, CancellationToken.None);
+        var token = await AuthApiClient.LoginAsync(Model.Password, CancellationToken.None);
         if (token is null)
         {
             _error = "Невірний пароль.";
