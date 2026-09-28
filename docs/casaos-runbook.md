@@ -24,21 +24,33 @@ sudo docker compose logs -f <service>   # api | bot | ui | postgres
 
 | Service | Host port | Notes |
 |---|---|---|
-| `ui` | `8082` | `8080` was already taken by zigbee2mqtt on this host |
-| `postgres` | `5432` | published for local-dev convenience, not a security requirement |
-| `api` | *(none)* | intentionally not published — see [architecture.md](architecture.md)'s Security section |
+| `ui` | `127.0.0.1:8082` | Bound to localhost only — reachable via the existing Cloudflare Tunnel (host network mode), never directly from the LAN/internet |
+| `api` | `127.0.0.1:5279` | Same as `ui` — localhost-only, protected by auth (JWT or API key) once reached through the tunnel |
+| `postgres` | `5432` | Published for local-dev convenience, not a security requirement |
 
 ## `.env` (secrets — never committed)
 
-Lives at `~/dzhusshelter/.env`. Must contain exactly these three lines, **no spaces around `=`, no quotes**:
+Lives at `~/dzhusshelter/.env`. Must contain exactly these seven lines, **no spaces around `=`, no quotes**:
 
 ```
 POSTGRES_PASSWORD=...
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_ALLOWED_CHAT_ID=...
+JWT_SIGNING_KEY=...
+ADMIN_PASSWORD_HASH=...
+API_KEY_BOT=...
+API_KEY_SHORTCUTS=...
 ```
 
-If `sudo docker compose config | grep -A2 ConnectionStrings` ever shows `Password=` empty despite `.env` looking right, see "If something breaks" below — that exact symptom already happened once (see Known Gotchas).
+Generate `JWT_SIGNING_KEY`/`API_KEY_BOT`/`API_KEY_SHORTCUTS` as random strings, e.g.:
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+Generate `ADMIN_PASSWORD_HASH` as a bcrypt hash of your chosen dashboard password — never store the plaintext:
+```bash
+pip install bcrypt
+python3 -c "import bcrypt; print(bcrypt.hashpw(b'your-chosen-password', bcrypt.gensalt()).decode())"
+```
 
 ## Protecting the Postgres volume (important!)
 
@@ -95,3 +107,23 @@ docker run --rm -v dzhusshelter_postgres-data:/data -v ~/backups:/backup alpine 
   ```bash
   sudo docker compose exec postgres psql -U postgres dzhusshelter -c "SELECT \"SubType\", count(*) FROM \"HabitEntries\" GROUP BY \"SubType\";"
   ```
+
+## Public access via Cloudflare Tunnel
+
+`ui` and `api` are reachable from the internet through the CasaOS host's existing
+`cloudflared` app (already used for Home Assistant, host network mode) — no second
+tunnel container. Add two Public Hostname entries to that same tunnel (Cloudflare
+Zero Trust dashboard → Networks → Tunnels → your tunnel → Public Hostname, or this
+image's own web UI if it exposes the same setting):
+
+| Public hostname | Service | Target |
+|---|---|---|
+| `dashboard.<your-domain>` | `ui` | `http://127.0.0.1:8082` |
+| `api.<your-domain>` | `api` | `http://127.0.0.1:5279` |
+
+### iOS Shortcuts: sending data to `api.<your-domain>`
+
+In the Shortcuts app, on the "Get Contents of URL" (or "Get/Post Contents of URL")
+action: open **Headers**, add a header named `X-Api-Key` with the value of this
+deployment's `API_KEY_SHORTCUTS` secret. No other setup needed — this key is
+separate from the bot's, so revoking/rotating one never affects the other.
