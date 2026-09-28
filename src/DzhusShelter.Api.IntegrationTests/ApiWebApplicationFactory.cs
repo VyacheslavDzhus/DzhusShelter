@@ -1,7 +1,6 @@
 using DzhusShelter.Api.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Testcontainers.PostgreSql;
@@ -20,6 +19,19 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>, I
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:16-alpine").Build();
 
+    public ApiWebApplicationFactory()
+    {
+        // Program.cs reads Jwt:SigningKey eagerly, before WebApplicationFactory's Build()
+        // interception point runs — so a ConfigureAppConfiguration in-memory collection
+        // (spliced in only at that interception point) is too late to be seen by it. Only
+        // genuinely early sources, like environment variables (loaded by
+        // WebApplication.CreateBuilder(args) at the very start), are visible in time.
+        Environment.SetEnvironmentVariable("Jwt__SigningKey", "test-signing-key-at-least-32-bytes-long!");
+        Environment.SetEnvironmentVariable("Auth__AdminPasswordHash", AdminPasswordHash);
+        Environment.SetEnvironmentVariable("Auth__ApiKeyBot", BotApiKey);
+        Environment.SetEnvironmentVariable("Auth__ApiKeyShortcuts", ShortcutsApiKey);
+    }
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
@@ -27,16 +39,6 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>, I
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Jwt:SigningKey"] = "test-signing-key-at-least-32-bytes-long!",
-                ["Auth:AdminPasswordHash"] = AdminPasswordHash,
-                ["Auth:ApiKeyBot"] = BotApiKey,
-                ["Auth:ApiKeyShortcuts"] = ShortcutsApiKey,
-            });
-        });
         builder.ConfigureServices(services =>
         {
             var descriptor = services.Single(d => d.ServiceType == typeof(DbContextOptions<AppDbContext>));
