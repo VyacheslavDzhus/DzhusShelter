@@ -1,6 +1,8 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using DzhusShelter.Api.Application.Abstractions;
+using DzhusShelter.Api.Application.Auth;
+using DzhusShelter.Api.Application.Auth.Commands;
 using DzhusShelter.Api.Application.BadHabits;
 using DzhusShelter.Api.Application.BadHabits.Commands;
 using DzhusShelter.Api.Application.BadHabits.Dtos;
@@ -73,6 +75,10 @@ builder.Services.AddScoped<IValidator<LogHabitEntryCommand>, LogHabitEntryComman
 builder.Services.AddScoped<IValidator<GetHabitEntriesQuery>, GetHabitEntriesQueryValidator>();
 builder.Services.AddScoped<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>, LogHabitEntryCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetHabitEntriesQuery, Result<IReadOnlyList<HabitEntryDto>>>, GetHabitEntriesQueryHandler>();
+
+builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+builder.Services.AddScoped<IValidator<LoginCommand>, LoginCommandValidator>();
+builder.Services.AddScoped<ICommandHandler<LoginCommand, Result<string>>, LoginCommandHandler>();
 
 var app = builder.Build();
 
