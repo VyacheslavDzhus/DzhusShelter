@@ -20,11 +20,17 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
         Converters = { new JsonStringEnumConverter() },
     };
 
+    // Keep a reference to the factory (not just the pre-authenticated client), so other
+    // tests in this class can mint an independent, credential-less HttpClient without
+    // spinning up a second Testcontainers Postgres:
+    private readonly ApiWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public BadHabitsEndpointsTests(ApiWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
+        _client.DefaultRequestHeaders.Add("X-Api-Key", ApiWebApplicationFactory.BotApiKey);
     }
 
     private sealed record LogEntryResponse(Guid Id, bool AlreadyLogged);
@@ -79,5 +85,17 @@ public class BadHabitsEndpointsTests : IClassFixture<ApiWebApplicationFactory>
             $"&habitType={HabitType.Smoking}&subType={HabitSubType.Hookah}");
         var entries = await getResponse.Content.ReadFromJsonAsync<List<HabitEntryDto>>(JsonOptions);
         entries.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetEntries_WithoutAnyCredential_ReturnsUnauthorized()
+    {
+        // A fresh HttpClient from the same factory/running Postgres container — its
+        // DefaultRequestHeaders start empty, so it carries no X-Api-Key, unlike _client.
+        using var anonymousClient = _factory.CreateClient();
+
+        var response = await anonymousClient.GetAsync("/api/bad-habits/entries");
+
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }
