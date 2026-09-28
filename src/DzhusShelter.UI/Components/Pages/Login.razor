@@ -1,0 +1,67 @@
+@page "/login"
+@using DzhusShelter.UI.Services
+@inject AuthApiClient AuthApiClient
+@inject AuthCookieService AuthCookieService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
+
+<PageTitle>Вхід — Dzhus Shelter</PageTitle>
+
+<div class="login-container">
+    <EditForm Model="_model" OnValidSubmit="HandleLoginAsync" FormName="login">
+        <DataAnnotationsValidator />
+        <div class="login-field">
+            <label for="password">Пароль</label>
+            <InputText id="password" type="password" class="nes-input" @bind-Value="_model.Password" />
+        </div>
+        @if (_error is not null)
+        {
+            <p class="login-error">@_error</p>
+        }
+        <button type="submit" class="nes-btn is-primary">Увійти</button>
+    </EditForm>
+</div>
+
+<style>
+    .login-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 4rem;
+    }
+
+    .login-field {
+        margin-bottom: 1rem;
+    }
+
+    .login-error {
+        color: #e76e55;
+    }
+</style>
+
+@code {
+    private readonly LoginModel _model = new();
+    private string? _error;
+
+    private sealed class LoginModel
+    {
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private async Task HandleLoginAsync()
+    {
+        var token = await AuthApiClient.LoginAsync(_model.Password, CancellationToken.None);
+        if (token is null)
+        {
+            _error = "Невірний пароль.";
+            return;
+        }
+
+        var httpContext = HttpContextAccessor.HttpContext
+            ?? throw new InvalidOperationException("Login must be handled during a static (non-interactive) request.");
+        AuthCookieService.SetToken(httpContext, token);
+
+        // forceLoad: a fresh full-page request, so the browser is guaranteed to send the
+        // cookie just set above on the very next navigation.
+        NavigationManager.NavigateTo("/", forceLoad: true);
+    }
+}

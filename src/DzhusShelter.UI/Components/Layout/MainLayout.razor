@@ -1,4 +1,7 @@
 ﻿@inherits LayoutComponentBase
+@inject DzhusShelter.UI.Services.AuthCookieService AuthCookieService
+@inject IHttpContextAccessor HttpContextAccessor
+@inject NavigationManager NavigationManager
 
 <div class="page">
     <div class="sidebar">
@@ -21,3 +24,21 @@
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        // Null means we're past the initial static render, already inside an interactive
+        // circuit for a page that already passed this same check during that first pass —
+        // nothing to re-verify, and there's no HttpContext left to redirect with anyway.
+        if (httpContext is null)
+            return;
+
+        var isLoginPage = httpContext.Request.Path.StartsWithSegments("/login");
+        var token = AuthCookieService.GetToken(httpContext);
+
+        if (token is null && !isLoginPage)
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+    }
+}
