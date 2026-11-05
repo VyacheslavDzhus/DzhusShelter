@@ -11,6 +11,8 @@ using DzhusShelter.Api.Domain.Common;
 using DzhusShelter.Api.Infrastructure;
 using DzhusShelter.Api.Infrastructure.Auth;
 using DzhusShelter.Api.Infrastructure.BadHabits;
+using DzhusShelter.Api.Infrastructure.Birthdays;
+using DzhusShelter.Api.Application.Birthdays;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -75,6 +77,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 builder.Services.AddScoped<IHabitEntryRepository, EfHabitEntryRepository>();
+builder.Services.AddScoped<IBirthdayRepository, EfBirthdayRepository>();
+builder.Services.AddScoped<IBirthdayNotificationRepository, EfBirthdayNotificationRepository>();
 builder.Services.AddScoped<IValidator<LogHabitEntryCommand>, LogHabitEntryCommandValidator>();
 builder.Services.AddScoped<IValidator<GetHabitEntriesQuery>, GetHabitEntriesQueryValidator>();
 builder.Services.AddScoped<ICommandHandler<LogHabitEntryCommand, Result<LogHabitEntryResult>>, LogHabitEntryCommandHandler>();
