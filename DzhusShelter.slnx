@@ -5,4 +5,6 @@
   <Project Path="src/DzhusShelter.Api.IntegrationTests/DzhusShelter.Api.IntegrationTests.csproj" />
   <Project Path="src/DzhusShelter.TelegramBot/DzhusShelter.TelegramBot.csproj" />
   <Project Path="src/DzhusShelter.TelegramBot.Tests/DzhusShelter.TelegramBot.Tests.csproj" />
+  <Project Path="src/DzhusShelter.MainBot/DzhusShelter.MainBot.csproj" />
+  <Project Path="src/DzhusShelter.MainBot.Tests/DzhusShelter.MainBot.Tests.csproj" />
 </Solution>
