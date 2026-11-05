@@ -1,0 +1,274 @@
+@page "/birthdays"
+@rendermode InteractiveServer
+@using DzhusShelter.UI.Services
+@inject BirthdaysApiClient ApiClient
+
+<PageTitle>Дні народження</PageTitle>
+
+<h1>Дні народження</h1>
+
+<PixelCard Title="🎂 Дні народження" TitleOverlay="true">
+    <ErrorBoundary>
+        <ChildContent>
+            <form class="birthdays-form" @onsubmit="AddAsync">
+                <input type="text" class="nes-input birthdays-input-name" placeholder="Ім'я" maxlength="100"
+                       @bind="_newName" @bind:event="oninput" />
+                <input type="number" class="nes-input birthdays-input-num" placeholder="дд" min="1" max="31"
+                       @bind="_newDay" />
+                <input type="number" class="nes-input birthdays-input-num" placeholder="мм" min="1" max="12"
+                       @bind="_newMonth" />
+                <input type="number" class="nes-input birthdays-input-year" placeholder="рік (необов.)" min="1900"
+                       @bind="_newYear" />
+                <button type="submit" class="nes-btn is-warning" disabled="@_busy">+ ДОДАТИ</button>
+            </form>
+            @if (_formError is not null)
+            {
+                <p class="birthdays-error">@_formError</p>
+            }
+
+            @if (_loadFailed)
+            {
+                <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+            }
+            else if (_items is null)
+            {
+                <p class="birthdays-muted">Завантаження…</p>
+            }
+            else if (_items.Count == 0)
+            {
+                <p class="birthdays-muted">Поки що нікого. Додай першого!</p>
+            }
+            else
+            {
+                @foreach (var item in _items)
+                {
+                    <div class="birthdays-row" @key="item.Id">
+                        @if (_editingId == item.Id)
+                        {
+                            <div class="birthdays-edit">
+                                <input type="text" class="nes-input birthdays-input-name" maxlength="100"
+                                       @bind="_editName" @bind:event="oninput" />
+                                <input type="number" class="nes-input birthdays-input-num" min="1" max="31"
+                                       @bind="_editDay" />
+                                <input type="number" class="nes-input birthdays-input-num" min="1" max="12"
+                                       @bind="_editMonth" />
+                                <input type="number" class="nes-input birthdays-input-year" placeholder="рік" min="1900"
+                                       @bind="_editYear" />
+                                <button type="button" class="nes-btn is-success" disabled="@_busy"
+                                        @onclick="() => SaveEditAsync(item.Id)">💾</button>
+                                <button type="button" class="nes-btn" disabled="@_busy"
+                                        @onclick="CancelEdit">✖</button>
+                            </div>
+                            @if (_rowError is not null)
+                            {
+                                <p class="birthdays-error">@_rowError</p>
+                            }
+                        }
+                        else
+                        {
+                            <span class="birthdays-name">@item.Name</span>
+                            @if (item.DaysUntil == 0)
+                            {
+                                <span class="birthdays-badge birthdays-badge-today">СЬОГОДНІ</span>
+                            }
+                            else if (item.DaysUntil == 1)
+                            {
+                                <span class="birthdays-badge birthdays-badge-tomorrow">ЗАВТРА</span>
+                            }
+                            <span class="birthdays-muted">@Describe(item)</span>
+
+                            @if (_confirmDeleteId == item.Id)
+                            {
+                                <span class="birthdays-confirm">
+                                    Видалити?
+                                    <button type="button" class="nes-btn is-error" disabled="@_busy"
+                                            @onclick="() => DeleteAsync(item.Id)">Так</button>
+                                    <button type="button" class="nes-btn" disabled="@_busy"
+                                            @onclick="CancelDelete">Ні</button>
+                                </span>
+                            }
+                            else
+                            {
+                                <button type="button" class="nes-btn birthdays-icon-btn" title="Редагувати"
+                                        @onclick="() => StartEdit(item)">✏️</button>
+                                <button type="button" class="nes-btn birthdays-icon-btn" title="Видалити"
+                                        @onclick="() => AskDelete(item.Id)">🗑️</button>
+                            }
+                            @if (_rowError is not null && _confirmDeleteId == item.Id)
+                            {
+                                <p class="birthdays-error">@_rowError</p>
+                            }
+                        }
+                    </div>
+                }
+            }
+        </ChildContent>
+        <ErrorContent>
+            <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+        </ErrorContent>
+    </ErrorBoundary>
+</PixelCard>
+
+@code {
+    private const string GenericError = "Не вдалося зберегти. Перевір дані.";
+
+    private List<BirthdayDto>? _items;
+    private bool _loadFailed;
+    private bool _busy;
+
+    private string _newName = string.Empty;
+    private int? _newDay;
+    private int? _newMonth;
+    private int? _newYear;
+    private string? _formError;
+
+    private Guid? _editingId;
+    private string _editName = string.Empty;
+    private int? _editDay;
+    private int? _editMonth;
+    private int? _editYear;
+
+    private Guid? _confirmDeleteId;
+    private string? _rowError;
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            _items = await ApiClient.GetAllAsync(CancellationToken.None);
+            _loadFailed = false;
+        }
+        catch (HttpRequestException)
+        {
+            _loadFailed = true;
+        }
+    }
+
+    private static string Describe(BirthdayDto item)
+    {
+        var date = item.Year is { } year
+            ? $"{item.Day:00}.{item.Month:00}.{year}"
+            : $"{item.Day:00}.{item.Month:00}";
+        var until = item.DaysUntil <= 1 ? string.Empty : $" · через {item.DaysUntil} дн.";
+        var age = item.TurningAge is { } turning ? $"буде {turning}" : "вік невідомий";
+        return $"{date}{until} · {age}";
+    }
+
+    // Day/month are plain ints (the year is optional, so no date picker); empty inputs map to 0
+    // so the Api's validation produces the Ukrainian error message.
+    private async Task AddAsync()
+    {
+        _busy = true;
+        _formError = null;
+        try
+        {
+            var error = await ApiClient.CreateAsync(
+                new BirthdayInput(_newName, _newDay ?? 0, _newMonth ?? 0, _newYear), CancellationToken.None);
+            if (error is null)
+            {
+                _newName = string.Empty;
+                _newDay = _newMonth = _newYear = null;
+                await LoadAsync();
+            }
+            else
+            {
+                _formError = error;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _formError = GenericError;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void StartEdit(BirthdayDto item)
+    {
+        _editingId = item.Id;
+        _editName = item.Name;
+        _editDay = item.Day;
+        _editMonth = item.Month;
+        _editYear = item.Year;
+        _confirmDeleteId = null;
+        _rowError = null;
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _rowError = null;
+    }
+
+    private async Task SaveEditAsync(Guid id)
+    {
+        _busy = true;
+        _rowError = null;
+        try
+        {
+            var error = await ApiClient.UpdateAsync(
+                id, new BirthdayInput(_editName, _editDay ?? 0, _editMonth ?? 0, _editYear), CancellationToken.None);
+            if (error is null)
+            {
+                _editingId = null;
+                await LoadAsync();
+            }
+            else
+            {
+                _rowError = error;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _rowError = GenericError;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void AskDelete(Guid id)
+    {
+        _confirmDeleteId = id;
+        _editingId = null;
+        _rowError = null;
+    }
+
+    private void CancelDelete()
+    {
+        _confirmDeleteId = null;
+        _rowError = null;
+    }
+
+    private async Task DeleteAsync(Guid id)
+    {
+        _busy = true;
+        _rowError = null;
+        try
+        {
+            var error = await ApiClient.DeleteAsync(id, CancellationToken.None);
+            if (error is null)
+            {
+                _confirmDeleteId = null;
+                await LoadAsync();
+            }
+            else
+            {
+                _rowError = error;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            _rowError = "Не вдалося видалити. Спробуйте ще раз.";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+}

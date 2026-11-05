@@ -1,0 +1,85 @@
+.birthdays-form,
+.birthdays-edit {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.birthdays-form {
+    margin-bottom: 12px;
+}
+
+.birthdays-edit {
+    flex: 1 1 100%;
+}
+
+.birthdays-input-name {
+    flex: 1;
+    min-width: 140px;
+}
+
+.birthdays-input-num {
+    width: 80px;
+}
+
+.birthdays-input-year {
+    width: 150px;
+}
+
+.birthdays-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    border-bottom: 1px dashed #3a3a3e;
+}
+
+.birthdays-row:last-child {
+    border-bottom: none;
+}
+
+.birthdays-name {
+    flex: 1;
+    min-width: 120px;
+}
+
+.birthdays-muted {
+    color: #9a9aa0;
+    font-size: 12px;
+}
+
+.birthdays-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+    border: 2px solid #000;
+    color: #000;
+}
+
+.birthdays-badge-today {
+    background: #26b050;
+}
+
+.birthdays-badge-tomorrow {
+    background: #ffcc00;
+}
+
+.birthdays-icon-btn {
+    padding: 2px 8px;
+    font-size: 12px;
+}
+
+.birthdays-confirm {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.birthdays-error {
+    flex: 1 1 100%;
+    margin: 4px 0 0;
+    color: #e76e55;
+    font-size: 12px;
+}
