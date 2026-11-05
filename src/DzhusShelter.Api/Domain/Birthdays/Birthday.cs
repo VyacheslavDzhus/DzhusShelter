@@ -79,10 +79,14 @@ public sealed class Birthday
             return BirthdayErrors.NameRequired;
         if (trimmedName.Length > BirthdayErrors.MaxNameLength)
             return BirthdayErrors.NameTooLong;
+        // Year range checks run first: DateTime.DaysInMonth and DateOnly throw outside 1..9999,
+        // and any year above today's is in the future anyway.
+        if (year is not null && year < BirthdayErrors.MinYear)
+            return BirthdayErrors.YearTooEarly;
+        if (year is not null && year > today.Year)
+            return BirthdayErrors.DateInFuture;
         if (month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year ?? LeapYearForUnknownYear, month))
             return BirthdayErrors.InvalidDate;
-        if (year < BirthdayErrors.MinYear)
-            return BirthdayErrors.YearTooEarly;
         if (year is not null && new DateOnly(year.Value, month, day) > today)
             return BirthdayErrors.DateInFuture;
         return null;

@@ -86,6 +86,34 @@ public class BirthdayTests
         Birthday.Create("Саша", 1, 1, 1899, Today, CreatedAt).Error.Should().Be(BirthdayErrors.YearTooEarly);
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-5)]
+    public void Create_YearZeroOrNegative_FailsWithYearTooEarly(int year)
+    {
+        var result = Birthday.Create("Саша", 1, 1, year, Today, CreatedAt);
+
+        result.Error.Should().Be(BirthdayErrors.YearTooEarly);
+    }
+
+    [Fact]
+    public void Create_Year10000_FailsWithDateInFuture()
+    {
+        var result = Birthday.Create("Саша", 1, 1, 10000, Today, CreatedAt);
+
+        result.Error.Should().Be(BirthdayErrors.DateInFuture);
+    }
+
+    [Fact]
+    public void Update_YearZero_FailsWithoutThrowing()
+    {
+        var birthday = CreateValid(6, 11, null, "Оля");
+
+        var result = birthday.Update("Оля", 1, 1, 0, Today);
+
+        result.Error.Should().Be(BirthdayErrors.YearTooEarly);
+    }
+
     [Fact]
     public void Create_FullDateInFuture_Fails()
     {
