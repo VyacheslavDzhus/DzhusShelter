@@ -115,7 +115,7 @@ Main bot flow: get pending → send message → mark sent. This is **at-least-on
 
 ## API
 
-There is no `ApiClient` named policy in the code (the public-access spec's example never became one): every endpoint is protected by the global `FallbackPolicy` in `Program.cs` — any valid JWT **or any** valid API key. Per-client scoping for these endpoints: see **Access per client** below.
+Access is per client (see **Access per client** below): the `/api/birthdays` CRUD is behind the class-level `UiOnly` policy (JWT only) on `BirthdaysController`; the two notification endpoints are behind the class-level `MainBotNotifications` policy (main-bot API key only) on `BirthdayNotificationsController`; everything else (e.g. Bad Habits) stays under the global `FallbackPolicy` (JWT or API key, excluding the main-bot key). There is no `ApiClient` named policy — the public-access spec's example never became code.
 
 - `GET    /api/birthdays` → `GetBirthdaysQuery` (UI)
 - `POST   /api/birthdays` → create, returns `201` with id (UI)
