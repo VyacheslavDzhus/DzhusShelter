@@ -10,7 +10,14 @@ public sealed record BirthdayInput(string Name, int Day, int Month, int? Year);
 
 public sealed class BirthdaysApiClient
 {
-    private const string GenericError = "Не вдалося зберегти. Перевір дані.";
+    public const string GenericError = "Не вдалося зберегти. Перевір дані.";
+    public const string ConnectionError = "Немає зв'язку з сервером. Спробуй ще раз.";
+    public const string SessionExpiredError = "Сесія завершилась — увійди знову.";
+
+    // Failures that mean "the call did not complete" (network, timeout, unreadable body) rather
+    // than "the Api rejected the input"; pages catch exactly these to keep the circuit alive.
+    public static bool IsTransportFailure(Exception ex) =>
+        ex is HttpRequestException or TaskCanceledException or JsonException;
 
     // Same options as BadHabitsApiClient: without case-insensitivity and the string-enum
     // converter, deserialization silently yields default values instead of throwing.
@@ -57,6 +64,9 @@ public sealed class BirthdaysApiClient
     {
         if (response.IsSuccessStatusCode)
             return null;
+
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            return SessionExpiredError;
 
         // Api failures are { "error": "..." }; malformed bodies come back as ProblemDetails without it.
         try

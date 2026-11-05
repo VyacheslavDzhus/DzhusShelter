@@ -110,8 +110,6 @@
 </PixelCard>
 
 @code {
-    private const string GenericError = "Не вдалося зберегти. Перевір дані.";
-
     private List<BirthdayDto>? _items;
     private bool _loadFailed;
     private bool _busy;
@@ -140,7 +138,7 @@
             _items = await ApiClient.GetAllAsync(CancellationToken.None);
             _loadFailed = false;
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (BirthdaysApiClient.IsTransportFailure(ex))
         {
             _loadFailed = true;
         }
@@ -152,7 +150,9 @@
             ? $"{item.Day:00}.{item.Month:00}.{year}"
             : $"{item.Day:00}.{item.Month:00}";
         var until = item.DaysUntil <= 1 ? string.Empty : $" · через {item.DaysUntil} дн.";
-        var age = item.TurningAge is { } turning ? $"буде {turning}" : "вік невідомий";
+        var age = item.TurningAge is { } turning
+            ? (item.DaysUntil == 0 ? $"виповнюється {turning}" : $"буде {turning}")
+            : "вік невідомий";
         return $"{date}{until} · {age}";
     }
 
@@ -177,9 +177,9 @@
                 _formError = error;
             }
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (BirthdaysApiClient.IsTransportFailure(ex))
         {
-            _formError = GenericError;
+            _formError = BirthdaysApiClient.ConnectionError;
         }
         finally
         {
@@ -222,9 +222,9 @@
                 _rowError = error;
             }
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (BirthdaysApiClient.IsTransportFailure(ex))
         {
-            _rowError = GenericError;
+            _rowError = BirthdaysApiClient.ConnectionError;
         }
         finally
         {
@@ -262,9 +262,9 @@
                 _rowError = error;
             }
         }
-        catch (HttpRequestException)
+        catch (Exception ex) when (BirthdaysApiClient.IsTransportFailure(ex))
         {
-            _rowError = "Не вдалося видалити. Спробуйте ще раз.";
+            _rowError = BirthdaysApiClient.ConnectionError;
         }
         finally
         {
