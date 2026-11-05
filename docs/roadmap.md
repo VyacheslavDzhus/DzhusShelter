@@ -125,7 +125,7 @@ Brainstormed 2026-09-26, none picked yet — pick one and brainstorm it properly
 - **Structured logging / observability** (Serilog → Grafana/Prometheus/OpenTelemetry) — the project currently has no logging beyond console output
 
 **Small but useful, not tied to a curriculum topic:**
-- Automated daily Postgres backup on CasaOS (cron + `pg_dump`, per [casaos-runbook.md](casaos-runbook.md)) — offered during the Phase 1 disaster-recovery discussion, never actioned
+- ~~Automated Postgres backup on CasaOS~~ — **done 2026-11-05**: weekly `pg_dump` via a `backup` compose service, newest 3 kept, catch-up after power cuts instead of a fixed cron slot (see [casaos-runbook.md](casaos-runbook.md#backups-automatic-weekly)). Still same-disk only — an off-box copy is the open follow-up
 - This file's Progress log (below) hasn't been updated since 2026-09-21 despite the CI/CD pipeline, the CQRS folder split, the dedup business rule, and the calendar/stats Blazor components built since — worth a catch-up entry
 
 ## Progress log

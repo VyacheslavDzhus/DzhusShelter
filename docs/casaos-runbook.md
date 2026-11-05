@@ -17,7 +17,7 @@ sudo docker compose up -d
 
 ```bash
 sudo docker compose ps
-sudo docker compose logs -f <service>   # api | bot | ui | postgres
+sudo docker compose logs -f <service>   # api | bot | ui | postgres | backup
 ```
 
 ## Current ports (host machine)
@@ -70,17 +70,36 @@ All habit-tracking data lives in the named Docker volume `dzhusshelter_postgres-
   docker volume inspect dzhusshelter_postgres-data
   ```
 
-### Backups (do this periodically)
+### Backups (automatic, weekly)
 
-Logical backup — small, easy to restore, recommended for routine use:
+The `backup` service in `docker-compose.yml` (script: [ops/postgres-backup/backup.sh](../ops/postgres-backup/backup.sh)) keeps **the 3 newest weekly dumps** in `~/dzhusshelter/backups/` (override with `BACKUP_DIR` in `.env`). It starts with the rest of the stack — nothing to schedule on the host.
+
+- **When:** not a fixed cron slot — once an hour it checks whether the newest dump is older than 7 days, and if so makes one. A power cut at "backup time" therefore can't skip a week: the dump just happens on the first check after the server is back up. The very first `up -d` with this service makes a dump straight away.
+- **Rotation:** after every successful dump, everything past the 3 newest is deleted. A dump is written to a hidden `.partial` file first and only renamed on success, so a failed dump never pushes a good one out.
+- **Format:** `pg_dump --format=custom` (compressed, restored with `pg_restore`), files named `dzhusshelter-<UTC timestamp>.dump`, readable by root only.
+- **Same disk as the database** — protects against bad migrations, accidental deletes, broken data; **not** against the disk itself dying. Copy a dump elsewhere now and then if that matters.
+
 ```bash
-sudo docker compose exec postgres pg_dump -U postgres dzhusshelter > ~/dzhusshelter-backup-$(date +%F).sql
+ls -lh ~/dzhusshelter/backups/                       # what's there
+sudo docker compose logs backup                      # "created …" / "rotated out …" / "FAILED …"
+sudo docker compose exec backup sh /usr/local/bin/backup.sh --once   # take one right now (e.g. before a risky deploy) — counts toward the 3
 ```
 
-Restore from one:
+### Rolling back to a backup
+
+This **replaces the whole database** with the state from the dump — everything logged after it is lost. Drop-and-recreate (rather than restoring on top of the live DB) is deliberate: restoring over existing tables either fails on conflicts or, with `--clean`, leaves behind any table a newer migration added, which then breaks the API's auto-migrate on startup.
+
 ```bash
-cat ~/dzhusshelter-backup-2026-09-23.sql | sudo docker compose exec -T postgres psql -U postgres dzhusshelter
+cd ~/dzhusshelter
+ls backups/                                           # pick the file to roll back to
+sudo docker compose stop api bot                      # nothing writes while we swap
+sudo docker compose exec backup dropdb --force dzhusshelter
+sudo docker compose exec backup createdb dzhusshelter
+sudo docker compose exec backup pg_restore --dbname=dzhusshelter /backups/dzhusshelter-<timestamp>.dump
+sudo docker compose start api bot
 ```
+
+The dump includes EF Core's `__EFMigrationsHistory`, so on start the API re-applies any migration newer than the backup by itself.
 
 Full volume backup — for disaster recovery (whole data directory as a tarball):
 ```bash

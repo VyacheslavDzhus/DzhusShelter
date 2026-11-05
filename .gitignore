@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Postgres dumps written by the `backup` compose service (real user data — never commit)
+/backups/
+
 # User-specific files
 *.rsuser
 *.suo

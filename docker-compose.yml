@@ -59,5 +59,24 @@ services:
       - postgres-data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  backup:
+    # Same image as postgres so pg_dump/pg_restore always match the server's major version.
+    # The entrypoint is overridden: we only want the client tools, not a second database.
+    # Weekly dump, newest 3 kept — see ops/postgres-backup/backup.sh and docs/casaos-runbook.md.
+    image: postgres:16-alpine
+    container_name: dzhusshelter-backup
+    entrypoint: ["sh", "/usr/local/bin/backup.sh"]
+    environment:
+      - PGHOST=postgres
+      - PGUSER=postgres
+      - PGDATABASE=dzhusshelter
+      - PGPASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./ops/postgres-backup/backup.sh:/usr/local/bin/backup.sh:ro
+      - ${BACKUP_DIR:-./backups}:/backups
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
 volumes:
   postgres-data:
