@@ -19,6 +19,8 @@ jobs:
             dockerfile: src/DzhusShelter.UI/Dockerfile
           - service: bot
             dockerfile: src/DzhusShelter.TelegramBot/Dockerfile
+          - service: main-bot
+            dockerfile: src/DzhusShelter.MainBot/Dockerfile
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

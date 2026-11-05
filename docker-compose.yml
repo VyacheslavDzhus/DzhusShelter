@@ -28,8 +28,22 @@ services:
       - Auth__AdminPasswordHash=${ADMIN_PASSWORD_HASH}
       - Auth__ApiKeyBot=${API_KEY_BOT}
       - Auth__ApiKeyShortcuts=${API_KEY_SHORTCUTS}
+      - Auth__ApiKeyMainBot=${API_KEY_MAIN_BOT}
     depends_on:
       - postgres
+    restart: unless-stopped
+
+  main-bot:
+    # Outbound-only (polls the API, sends via Telegram) — no ports published.
+    image: 1928374650810/dzhusshelter-main-bot:latest
+    container_name: dzhusshelter-main-bot
+    environment:
+      - Telegram__BotToken=${TELEGRAM_MAIN_BOT_TOKEN}
+      - Telegram__ChatId=${TELEGRAM_ALLOWED_CHAT_ID}
+      - Api__BaseUrl=http://api:8080
+      - Api__ApiKey=${API_KEY_MAIN_BOT}
+    depends_on:
+      - api
     restart: unless-stopped
 
   bot:

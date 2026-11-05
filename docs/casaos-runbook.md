@@ -17,7 +17,7 @@ sudo docker compose up -d
 
 ```bash
 sudo docker compose ps
-sudo docker compose logs -f <service>   # api | bot | ui | postgres | backup
+sudo docker compose logs -f <service>   # api | bot | main-bot | ui | postgres | backup
 ```
 
 ## Current ports (host machine)
@@ -30,7 +30,7 @@ sudo docker compose logs -f <service>   # api | bot | ui | postgres | backup
 
 ## `.env` (secrets — never committed)
 
-Lives at `~/dzhusshelter/.env`. Must contain exactly these seven lines, **no spaces around `=`, no quotes**:
+Lives at `~/dzhusshelter/.env`. Must contain exactly these nine lines, **no spaces around `=`, no quotes**:
 
 ```
 POSTGRES_PASSWORD=...
@@ -40,9 +40,11 @@ JWT_SIGNING_KEY=...
 ADMIN_PASSWORD_HASH=...
 API_KEY_BOT=...
 API_KEY_SHORTCUTS=...
+TELEGRAM_MAIN_BOT_TOKEN=...
+API_KEY_MAIN_BOT=...
 ```
 
-Generate `JWT_SIGNING_KEY`/`API_KEY_BOT`/`API_KEY_SHORTCUTS` as random strings, e.g.:
+Generate `JWT_SIGNING_KEY`/`API_KEY_BOT`/`API_KEY_SHORTCUTS`/`API_KEY_MAIN_BOT` as random strings, e.g.:
 ```bash
 python3 -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
@@ -56,6 +58,14 @@ python3 -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass().encode
 This prompts for the password interactively instead of taking it as a command-line literal — embedding the plaintext directly in the command would leave it sitting in `~/.bash_history` and visible to other processes via `ps` while it runs.
 
 The `$$` (not a typo) is required because Docker Compose's `.env` parser treats a bare `$` as a variable reference — bcrypt hashes always contain literal `$` characters, so pasting one in unescaped silently corrupts it and breaks login.
+
+### Main bot (`main-bot`, birthday notifications)
+
+One-time prerequisite: the main bot already exists in @BotFather. Put its token into `TELEGRAM_MAIN_BOT_TOKEN`, then open the bot in Telegram (from the chat whose ID is `TELEGRAM_ALLOWED_CHAT_ID`) and press **Start** once. Without that, Telegram answers 403 "bot can't initiate conversation" and no notification is ever delivered. It reuses `TELEGRAM_ALLOWED_CHAT_ID` as the target chat and publishes no ports.
+
+`API_KEY_MAIN_BOT` is its own key (generate it like the others above). It is accepted only by the two birthday-notification endpoints (list pending / acknowledge) — everything else answers 401/403 for it, so a leaked bot key can't read or change any other data.
+
+After adding the two new `.env` lines, apply with `sudo docker compose pull && sudo docker compose up -d`, then check `sudo docker compose logs main-bot`.
 
 ## Protecting the Postgres volume (important!)
 

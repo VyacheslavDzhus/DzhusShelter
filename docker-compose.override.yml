@@ -13,3 +13,8 @@ services:
     build:
       context: .
       dockerfile: src/DzhusShelter.TelegramBot/Dockerfile
+
+  main-bot:
+    build:
+      context: .
+      dockerfile: src/DzhusShelter.MainBot/Dockerfile
