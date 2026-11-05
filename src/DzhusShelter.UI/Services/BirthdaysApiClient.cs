@@ -12,6 +12,7 @@ public sealed class BirthdaysApiClient
 {
     public const string GenericError = "Не вдалося зберегти. Перевір дані.";
     public const string ConnectionError = "Немає зв'язку з сервером. Спробуй ще раз.";
+    public const string ServerError = "Сервер не зміг обробити запит. Спробуй пізніше.";
     public const string SessionExpiredError = "Сесія завершилась — увійди знову.";
 
     // Failures that mean "the call did not complete" (network, timeout, unreadable body) rather
@@ -87,6 +88,7 @@ public sealed class BirthdaysApiClient
         {
         }
 
-        return GenericError;
+        // "Check your data" only makes sense for a validation rejection (400), not for 403/404/5xx.
+        return response.StatusCode == System.Net.HttpStatusCode.BadRequest ? GenericError : ServerError;
     }
 }

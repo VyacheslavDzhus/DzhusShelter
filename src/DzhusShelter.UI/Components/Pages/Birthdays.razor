@@ -26,9 +26,9 @@
                 <p class="birthdays-error">@_formError</p>
             }
 
-            @if (_loadFailed)
+            @if (_loadError is not null)
             {
-                <p>Не вдалося завантажити дані. Спробуйте оновити сторінку.</p>
+                <p>@_loadError</p>
             }
             else if (_items is null)
             {
@@ -111,7 +111,7 @@
 
 @code {
     private List<BirthdayDto>? _items;
-    private bool _loadFailed;
+    private string? _loadError;
     private bool _busy;
 
     private string _newName = string.Empty;
@@ -136,11 +136,14 @@
         try
         {
             _items = await ApiClient.GetAllAsync(CancellationToken.None);
-            _loadFailed = false;
+            _loadError = null;
         }
         catch (Exception ex) when (BirthdaysApiClient.IsTransportFailure(ex))
         {
-            _loadFailed = true;
+            // GetFromJsonAsync throws HttpRequestException carrying the status code on non-2xx.
+            _loadError = ex is HttpRequestException { StatusCode: System.Net.HttpStatusCode.Unauthorized }
+                ? BirthdaysApiClient.SessionExpiredError
+                : "Не вдалося завантажити дані. Спробуйте оновити сторінку.";
         }
     }
 
