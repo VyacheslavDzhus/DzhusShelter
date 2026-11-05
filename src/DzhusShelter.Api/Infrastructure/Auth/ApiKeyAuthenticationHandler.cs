@@ -30,18 +30,20 @@ public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAu
         var providedKey = provided.ToString();
         var botKey = _configuration["Auth:ApiKeyBot"];
         var shortcutsKey = _configuration["Auth:ApiKeyShortcuts"];
+        var mainBotKey = _configuration["Auth:ApiKeyMainBot"];
 
         // Plain string comparison, not constant-time: this is a personal-use API key over
         // HTTPS, not a defense against nation-state timing attacks — proportionate to the
         // threat model, not an oversight.
         string? clientName = !string.IsNullOrEmpty(botKey) && providedKey == botKey ? "bot"
             : !string.IsNullOrEmpty(shortcutsKey) && providedKey == shortcutsKey ? "shortcuts"
+            : !string.IsNullOrEmpty(mainBotKey) && providedKey == mainBotKey ? AuthPolicies.MainBotClient
             : null;
 
         if (clientName is null)
             return Task.FromResult(AuthenticateResult.Fail("Invalid API key."));
 
-        var identity = new ClaimsIdentity([new Claim("client_name", clientName)], SchemeName);
+        var identity = new ClaimsIdentity([new Claim(AuthPolicies.ClientNameClaim, clientName)], SchemeName);
         var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), SchemeName);
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }
