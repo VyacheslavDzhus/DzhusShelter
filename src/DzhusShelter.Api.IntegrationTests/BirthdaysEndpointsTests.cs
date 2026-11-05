@@ -4,7 +4,10 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using DzhusShelter.Api.Application.Birthdays.Dtos;
 using DzhusShelter.Api.Domain.Birthdays;
+using DzhusShelter.Api.Infrastructure;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DzhusShelter.Api.IntegrationTests;
 
@@ -34,7 +37,7 @@ public class BirthdaysEndpointsTests : IClassFixture<ApiWebApplicationFactory>, 
 
     public async Task InitializeAsync()
     {
-        // Tests in this class share one Postgres and one fake clock: reset both.
+        // Tests in this class share one Postgres and one fake clock: reset all of it.
         // AdjustTime, not SetUtcNow — the latter refuses to move backwards.
         _factory.BirthdayTime.AdjustTime(Nov12AfterNine);
         _ui = await _factory.CreateUiClientAsync();
@@ -42,6 +45,11 @@ public class BirthdaysEndpointsTests : IClassFixture<ApiWebApplicationFactory>, 
 
         foreach (var birthday in await GetBirthdaysAsync())
             (await _ui.DeleteAsync($"/api/birthdays/{birthday.Id}")).EnsureSuccessStatusCode();
+
+        // There is no endpoint to un-send a reminder, so sent-markers are cleared directly —
+        // otherwise one test's (Today, 2026-11-12) row would hide another test's reminder.
+        using var scope = _factory.Services.CreateScope();
+        await scope.ServiceProvider.GetRequiredService<AppDbContext>().BirthdayNotifications.ExecuteDeleteAsync();
     }
 
     public Task DisposeAsync()

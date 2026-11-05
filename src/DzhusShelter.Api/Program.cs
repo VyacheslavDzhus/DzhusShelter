@@ -118,6 +118,10 @@ builder.Services.AddScoped<ICommandHandler<LoginCommand, Result<string>>, LoginC
 
 var app = builder.Build();
 
+// Fail fast: resolving the clock now makes a missing Europe/Kyiv (no tzdata) crash startup
+// with a clear log line, instead of a 500 on the first birthday request.
+app.Services.GetRequiredService<IBirthdayClock>();
+
 // Cloudflare Tunnel terminates TLS at its edge and forwards to this container over plain
 // HTTP — without this, Request.IsHttps is always false and RemoteIpAddress is always the
 // tunnel's own hop, breaking both secure-cookie logic (UI side) and the login rate

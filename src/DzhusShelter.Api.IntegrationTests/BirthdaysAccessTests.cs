@@ -18,9 +18,15 @@ public class BirthdaysAccessTests : IClassFixture<ApiWebApplicationFactory>
 
     private const string ListBirthdays = "GET /api/birthdays";
     private const string CreateBirthday = "POST /api/birthdays";
+    private const string UpdateBirthday = "PUT /api/birthdays/{id}";
+    private const string DeleteBirthday = "DELETE /api/birthdays/{id}";
     private const string PendingNotifications = "GET /api/birthdays/notifications/pending";
     private const string MarkNotificationSent = "POST /api/birthdays/notifications/sent";
     private const string BadHabitsEntries = "GET /api/bad-habits/entries";
+
+    // PUT/DELETE target an id that never exists: an allowed caller gets the handler's 404
+    // (whose body names this id — so it isn't a routing 404), a rejected one never gets that far.
+    private static readonly Guid UnknownId = Guid.Parse("6f1d2c3b-0000-4000-8000-00000000a11c");
 
     private readonly ApiWebApplicationFactory _factory;
 
@@ -39,6 +45,14 @@ public class BirthdaysAccessTests : IClassFixture<ApiWebApplicationFactory>
     [InlineData(Bot, CreateBirthday, false)]
     [InlineData(Shortcuts, CreateBirthday, false)]
     [InlineData(MainBot, CreateBirthday, false)]
+    [InlineData(Ui, UpdateBirthday, true)]
+    [InlineData(Bot, UpdateBirthday, false)]
+    [InlineData(Shortcuts, UpdateBirthday, false)]
+    [InlineData(MainBot, UpdateBirthday, false)]
+    [InlineData(Ui, DeleteBirthday, true)]
+    [InlineData(Bot, DeleteBirthday, false)]
+    [InlineData(Shortcuts, DeleteBirthday, false)]
+    [InlineData(MainBot, DeleteBirthday, false)]
     // Birthday notifications: main bot only.
     [InlineData(Ui, PendingNotifications, false)]
     [InlineData(Bot, PendingNotifications, false)]
@@ -59,7 +73,12 @@ public class BirthdaysAccessTests : IClassFixture<ApiWebApplicationFactory>
 
         using var response = await client.SendAsync(CreateRequest(endpoint));
 
-        if (allowed)
+        if (allowed && endpoint is UpdateBirthday or DeleteBirthday)
+        {
+            response.StatusCode.Should().Be(HttpStatusCode.NotFound, $"{clientName} must reach the {endpoint} handler");
+            (await response.Content.ReadAsStringAsync()).Should().Contain(UnknownId.ToString());
+        }
+        else if (allowed)
             response.IsSuccessStatusCode.Should().BeTrue($"{clientName} must be allowed to call {endpoint}, got {response.StatusCode}");
         else
             response.StatusCode.Should().BeOneOf([HttpStatusCode.Unauthorized, HttpStatusCode.Forbidden],
@@ -83,6 +102,11 @@ public class BirthdaysAccessTests : IClassFixture<ApiWebApplicationFactory>
         {
             Content = JsonContent.Create(new { name = "Перевірка доступу", day = 1, month = 1, year = (int?)null }),
         },
+        UpdateBirthday => new HttpRequestMessage(HttpMethod.Put, $"/api/birthdays/{UnknownId}")
+        {
+            Content = JsonContent.Create(new { name = "Перевірка доступу", day = 1, month = 1, year = (int?)null }),
+        },
+        DeleteBirthday => new HttpRequestMessage(HttpMethod.Delete, $"/api/birthdays/{UnknownId}"),
         PendingNotifications => new HttpRequestMessage(HttpMethod.Get, "/api/birthdays/notifications/pending"),
         MarkNotificationSent => new HttpRequestMessage(HttpMethod.Post, "/api/birthdays/notifications/sent")
         {

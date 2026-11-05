@@ -94,8 +94,9 @@ public sealed class ApiWebApplicationFactory : WebApplicationFactory<Program>, I
             services.AddDbContext<AppDbContext>(options => options.UseNpgsql(_postgres.GetConnectionString()));
 
             services.RemoveAll<IBirthdayClock>();
-            services.AddSingleton<IBirthdayClock>(
-                new KyivBirthdayClock(BirthdayTime, Options.Create(new BirthdaysOptions())));
+            // Options from the container, so the real "Birthdays" config binding is exercised too.
+            services.AddSingleton<IBirthdayClock>(sp =>
+                new KyivBirthdayClock(BirthdayTime, sp.GetRequiredService<IOptions<BirthdaysOptions>>()));
         });
     }
 
