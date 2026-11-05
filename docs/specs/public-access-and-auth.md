@@ -27,7 +27,9 @@ Two ASP.NET Core authentication schemes registered side by side in `Program.cs`:
 - **`Bearer` (JWT)** — `AddJwtBearer(...)`, symmetric `HMACSHA256` key from `JWT_SIGNING_KEY`. Validates tokens issued by this same Api's own login endpoint.
 - **`ApiKey`** — a custom `AuthenticationHandler<ApiKeyAuthenticationSchemeOptions>` that reads the `X-Api-Key` header and compares it against the configured per-client keys (`API_KEY_BOT`, `API_KEY_SHORTCUTS`). On success, builds a `ClaimsPrincipal` with a `client_name` claim (`"bot"` or `"shortcuts"`) — not for permissions (single-user data, nothing is restricted per-client), just so logs/handlers can tell who called.
 
-A combined authorization policy, e.g. `"ApiClient"`:
+> **Implementation note:** the `"ApiClient"` policy below was never implemented. Access is a global `FallbackPolicy` (any valid JWT or API key, except the main-bot key) plus the per-client class-level policies `UiOnly` and `MainBotNotifications` — see [birthdays.md](birthdays.md#access-per-client-decided-by-the-user-scope-by-client-least-privilege). The `client_name` claim is therefore now used for permissions, which supersedes the "Any per-client permission model" non-goal at the end of this spec for those endpoints.
+
+A combined authorization policy, e.g. `"ApiClient"` (original design, not built):
 
 ```csharp
 options.AddPolicy("ApiClient", policy =>

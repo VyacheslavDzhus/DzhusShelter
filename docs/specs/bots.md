@@ -2,6 +2,8 @@
 
 **Route:** `/bots` · **Status:** Mockup
 
+> **Update:** a "main bot" (`DzhusShelter.MainBot`, send-only notifications, first used for [Birthdays](birthdays.md)) now exists as a real process, separate from the manager bot (`DzhusShelter.TelegramBot`) — see [architecture.md](../architecture.md#multiple-bots). The `/bots` page described below is still a mockup and not wired to either bot.
+
 ## Overview
 
 Dashboard for a Telegram bot used to relay information (per the page's tagline "Боти для передачі інформації"). Shows bot status, today's message count, and a manual "send test message" action.

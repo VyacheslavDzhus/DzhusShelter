@@ -13,6 +13,7 @@ This repo doubles as a learning project — see [docs/roadmap.md](../roadmap.md)
 | Exchange | `/exchange` | [exchange.md](exchange.md) | Mockup |
 | Gym | `/gym` | [gym.md](gym.md) | Mockup |
 | Bad Habits | `/bad-habits` | [bad-habits.md](bad-habits.md) | Implemented |
+| Birthdays | `/birthdays` | [birthdays.md](birthdays.md) | Implemented |
 | Screen Time | `/screen-time` | [screen-time.md](screen-time.md) | Mockup |
 | Weather | `/weather` | [weather.md](weather.md) | Mockup |
 | Bots | `/bots` | [bots.md](bots.md) | Mockup |

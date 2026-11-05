@@ -10,13 +10,24 @@ This is scoped to **DzhusShelter only** — not a shared platform API for unrela
 
 ## Solution structure
 
-Three deployable projects, replacing the current single Blazor Server app:
+Four deployable projects (originally three; `DzhusShelter.MainBot` was added with Birthdays), replacing the original single Blazor Server app:
 
 - **`DzhusShelter.Api`** (ASP.NET Core Web API) — owns all data and business logic behind Clean Architecture layers (below). Hosts one controller per feature (`BadHabitsController` first; `GymController`, `FinanceController`, etc. as those features get rebuilt).
 - **`DzhusShelter.TelegramBot`** — a `BackgroundService` worker using the `Telegram.Bot` library, long polling (no public webhook needed). Calls `DzhusShelter.Api` over HTTP via a typed `HttpClient` for every write.
 - **`DzhusShelter.UI`** (existing Blazor Server project) — becomes a pure presentation layer. No direct EF Core/DB access. Calls `DzhusShelter.Api` over HTTP via a typed `HttpClient` for every read.
 
-All three run as separate containers in `docker-compose.yml`, alongside PostgreSQL, on the same private Docker network (see Security below).
+- **`DzhusShelter.MainBot`** — a send-only `BackgroundService` worker for notifications (see [Multiple bots](#multiple-bots)).
+
+All of them run as separate containers in `docker-compose.yml`, alongside PostgreSQL, on the same private Docker network (see Security below).
+
+## Multiple bots
+
+The project has several Telegram bots, each its own BotFather bot (own token), its own process/container and its own API key — a crash or redeploy of one never affects the other. Shared plumbing (typed `HttpClient`, settings) is deliberately duplicated until a third consumer appears.
+
+| Bot | Project | Role |
+|---|---|---|
+| Manager bot | `DzhusShelter.TelegramBot` | Data entry: user taps buttons, bot writes to `Api` (Bad Habits) |
+| Main bot | `DzhusShelter.MainBot` | Notifications: the bot writes to the user unprompted, send-only, polls `Api` every 5 min. Birthdays reminders are the first type ([specs/birthdays.md](specs/birthdays.md)) |
 
 ## Clean Architecture inside `DzhusShelter.Api`
 
@@ -37,6 +48,8 @@ Standard four-layer split (roadmap topic 4):
 
 `Api` and `UI` are reachable from the internet through the CasaOS host's existing Cloudflare Tunnel (originally set up for Home Assistant, host network mode — no second tunnel container). Every `Api` endpoint requires either a JWT (issued by `POST /api/auth/login` against a bcrypt-hashed admin password, used by the Blazor `UI`) or a per-client API key (`X-Api-Key`, used by the bot and by iOS Shortcuts) — see [docs/specs/public-access-and-auth.md](specs/public-access-and-auth.md) for the full design. `Api`'s port is still never published beyond `127.0.0.1` on the host (same for `UI`'s); the tunnel is the only way in from outside, and auth is required at that one entry point.
 
+Since Birthdays, access is also scoped **per client (least privilege)**: the global `FallbackPolicy` accepts any JWT or API key except the main bot's, while `BirthdaysController` is `UiOnly` (JWT) and `BirthdayNotificationsController` is `MainBotNotifications` (main-bot key only), both as class-level policies so a future action can't fail open. Bad Habits access for the existing keys is unchanged.
+
 ## Testing
 
 - Unit tests (xUnit + FluentAssertions) for domain invariants and command/query handlers, mocking `Infrastructure`.
@@ -45,4 +58,4 @@ Standard four-layer split (roadmap topic 4):
 ## Open decisions
 
 - **Migrating existing specs**: Finance, Gym, Exchange, etc. were speced against the old "Blazor talks directly to its own services" shape. Each gets updated to the `DzhusShelter.Api` + controller shape when its turn comes in the roadmap progression, not all at once now.
-- **Bots feature overlap**: [specs/bots.md](specs/bots.md) already covers a Telegram bot for a different purpose (relaying info, sending test messages). `DzhusShelter.TelegramBot` as introduced here is the same bot process gaining a second responsibility (habit logging), not a second bot — reconcile the two specs when the Bots feature itself gets implemented.
+- **Bots feature overlap**: [specs/bots.md](specs/bots.md) covers the `/bots` dashboard (status, test message), still a mockup. The bots themselves are settled — see [Multiple bots](#multiple-bots); reconcile the dashboard spec with them when the Bots feature gets implemented.

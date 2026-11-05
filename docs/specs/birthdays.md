@@ -1,6 +1,6 @@
 # Birthdays
 
-**Route:** `/birthdays` · **Status:** Spec'd
+**Route:** `/birthdays` · **Status:** Implemented
 
 ## Overview
 
@@ -212,6 +212,19 @@ Same PostgreSQL database as Bad Habits (`AppDbContext`): tables `Birthdays` and 
 ## Learning notes
 
 Topics this exercises for real: time zones + `TimeProvider`/`FakeTimeProvider`; a scheduled `BackgroundService`; at-least-once delivery with an idempotent acknowledgement backed by a unique constraint; per-client authorization policies (least privilege, claim-based) on top of the existing multi-scheme auth. **Deliberately simple "variant 1"** (bot polls the Api). A later step can move the same feature to Outbox → RabbitMQ → Inbox (`BirthdayReminderDue` event; the Inbox on the bot side is what would stop the duplicate in the crash window above) — kept as a separate roadmap step so the difference is visible.
+
+## Changes during implementation
+
+Decisions that refine or differ from the spec above (the rest was built as written):
+
+- **Two controllers, not one**: `BirthdaysController` (CRUD, class-level `UiOnly` policy, JWT only) and `BirthdayNotificationsController` (class-level `MainBotNotifications`, main-bot key only). Per-action `[Authorize]` would fail open for any future action added without it; class-level policies fail closed.
+- **"виповнюється N" on the day**: on the birthday itself the UI shows the age being turned instead of "через 0 дн.".
+- **Error messages split by cause** on the page: connection failure, expired session, and server/validation error each get their own text. Blazor InteractiveServer event handlers are not covered by the page's `ErrorBoundary`, so transport failures (timeouts) are caught explicitly instead of killing the circuit.
+- **Zero-people notifications are skipped**: the pending query never returns a kind with an empty list, and the main bot skips such items.
+- **`Telegram:ChatId` must be > 0**: `MainBotConfig` validates at startup; an appsettings placeholder `0` used to slip past a null check.
+- **Time zone resolved at startup**: `KyivBirthdayClock` is resolved eagerly after `Build()`, so a missing `Europe/Kyiv` fails the Api at boot rather than on the first request. The Api image resolves the zone without extra tzdata.
+- **Out-of-range years**: validation rejects them with 400 (previously `DateTime.DaysInMonth` threw, giving a 500).
+- **Access matrix** is covered by a 28-cell client × endpoint integration test.
 
 ## Open Decisions
 
