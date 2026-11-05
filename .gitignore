@@ -9,6 +9,9 @@
 # Postgres dumps written by the `backup` compose service (real user data — never commit)
 /backups/
 
+# Brainstorming mockup server scratch (superpowers visual companion)
+/.superpowers/
+
 # User-specific files
 *.rsuser
 *.suo
