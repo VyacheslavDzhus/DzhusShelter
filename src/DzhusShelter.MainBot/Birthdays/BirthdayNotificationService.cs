@@ -10,6 +10,11 @@ public sealed class BirthdayNotificationService(
     MainBotSettings settings,
     ILogger<BirthdayNotificationService> logger) : BackgroundService
 {
+    // Sent successfully but not yet acknowledged. Prevents re-sending while the ack keeps failing.
+    // In-memory on purpose: a restart clears it (spec accepts one resend in the crash window).
+    // Only touched from the single polling loop.
+    private readonly HashSet<(BirthdayNotificationKind Kind, DateOnly ForDate)> _awaitingAck = [];
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
@@ -29,6 +34,7 @@ public sealed class BirthdayNotificationService(
     /// <summary>
     /// One poll. Failures are isolated per notification and logged; only cancellation escapes.
     /// Order is send -> mark (at-least-once): never mark before a successful send.
+    /// If the send succeeded but the ack failed, later polls retry only the ack (never resend).
     /// </summary>
     public async Task RunOnceAsync(CancellationToken ct)
     {
@@ -51,10 +57,20 @@ public sealed class BirthdayNotificationService(
                 continue;
             }
 
+            // Entries from a previous day can never match again; drop them so the set can't grow.
+            _awaitingAck.RemoveWhere(e => e.ForDate < notification.ForDate);
+            var key = (notification.Kind, notification.ForDate);
+
             try
             {
-                await sender.SendAsync(BirthdayMessageFormatter.Format(notification), ct);
+                if (!_awaitingAck.Contains(key))
+                {
+                    await sender.SendAsync(BirthdayMessageFormatter.Format(notification), ct);
+                    _awaitingAck.Add(key);
+                }
+
                 await api.MarkSentAsync(notification.Kind, notification.ForDate, ct);
+                _awaitingAck.Remove(key);
             }
             catch (Exception ex) when (!ct.IsCancellationRequested)
             {

@@ -111,7 +111,7 @@ Consequences (accepted, documented, not bugs):
 
 ### Delivery guarantee
 
-Main bot flow: get pending → send message → mark sent. This is **at-least-once**: if the bot crashes (or the Api is unreachable) between a successful `sendMessage` and the "mark sent" call, the next poll sends the same reminder again. Chosen over at-most-once (mark first, then send), because a rare duplicate is better than a silently missed birthday. Duplicates are therefore possible only in that crash window — never on a normal day. (True exactly-once would need Telegram-side idempotency, which `sendMessage` doesn't offer — a good concrete example for the later Outbox/Inbox topic.)
+Main bot flow: get pending → send message → mark sent. This is **at-least-once**: if the bot crashes (or the Api is unreachable) between a successful `sendMessage` and the "mark sent" call, the next poll sends the same reminder again. Chosen over at-most-once (mark first, then send), because a rare duplicate is better than a silently missed birthday. Duplicates are therefore possible only in that crash window — never on a normal day. If the send succeeded but the ack keeps failing (Api/DB down, contract drift), the bot remembers the sent `(kind, date)` in memory and retries only the ack on later polls instead of resending; that memory is lost on restart, so a duplicate can occur only after a bot crash/restart between send and ack. (True exactly-once would need Telegram-side idempotency, which `sendMessage` doesn't offer — a good concrete example for the later Outbox/Inbox topic.)
 
 ## API
 

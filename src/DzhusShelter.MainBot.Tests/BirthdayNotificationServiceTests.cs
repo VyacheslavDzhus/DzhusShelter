@@ -13,7 +13,7 @@ public class BirthdayNotificationServiceTests
     private static readonly PendingBirthdayNotification Today =
         new(BirthdayNotificationKind.Today, Date, [new BirthdayPerson("Саша Пупкін", 25)]);
     private static readonly PendingBirthdayNotification Tomorrow =
-        new(BirthdayNotificationKind.Tomorrow, Date.AddDays(1), [new BirthdayPerson("Оля Коваль", null)]);
+        new(BirthdayNotificationKind.Tomorrow, Date, [new BirthdayPerson("Оля Коваль", null)]);
 
     private readonly IBirthdayNotificationsApi _api = Substitute.For<IBirthdayNotificationsApi>();
     private readonly INotificationSender _sender = Substitute.For<INotificationSender>();
@@ -103,5 +103,54 @@ public class BirthdayNotificationServiceTests
 
         await act.Should().ThrowAsync<OperationCanceledException>();
         await _api.DidNotReceive().MarkSentAsync(Arg.Any<BirthdayNotificationKind>(), Arg.Any<DateOnly>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunOnce_AckFailedEarlier_DoesNotResendAndRetriesAck()
+    {
+        Pending(Today);
+        _api.MarkSentAsync(BirthdayNotificationKind.Today, Today.ForDate, Arg.Any<CancellationToken>())
+            .Throws(new HttpRequestException("api down"));
+        var service = Service();
+
+        await service.RunOnceAsync(CancellationToken.None);
+        await service.RunOnceAsync(CancellationToken.None);
+
+        await _sender.Received(1).SendAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        await _api.Received(2).MarkSentAsync(BirthdayNotificationKind.Today, Today.ForDate, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunOnce_AckRetrySucceeds_ThenSameItemAppearingAgainIsTreatedAsNewAndSent()
+    {
+        Pending(Today);
+        _api.MarkSentAsync(BirthdayNotificationKind.Today, Today.ForDate, Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new HttpRequestException("api down")), Task.CompletedTask, Task.CompletedTask);
+        var service = Service();
+
+        await service.RunOnceAsync(CancellationToken.None); // send ok, ack fails
+        await service.RunOnceAsync(CancellationToken.None); // ack retried OK, entry forgotten
+        await service.RunOnceAsync(CancellationToken.None); // same item again -> new -> sent
+
+        await _sender.Received(2).SendAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task RunOnce_OldAwaitingAckEntries_AreDropped()
+    {
+        var yesterday = new PendingBirthdayNotification(BirthdayNotificationKind.Today, Date.AddDays(-1), [new BirthdayPerson("Іра Мельник", 30)]);
+        _api.MarkSentAsync(BirthdayNotificationKind.Today, yesterday.ForDate, Arg.Any<CancellationToken>())
+            .Throws(new HttpRequestException("api down"));
+        var service = Service();
+
+        Pending(yesterday);
+        await service.RunOnceAsync(CancellationToken.None); // sent, ack failed, remembered
+        Pending(Today);
+        await service.RunOnceAsync(CancellationToken.None); // new day: old entry dropped, today sent
+        Pending(yesterday);
+        await service.RunOnceAsync(CancellationToken.None); // yesterday entry was dropped -> sent again
+
+        await _sender.Received(2).SendAsync(BirthdayMessageFormatter.Format(yesterday), Arg.Any<CancellationToken>());
+        await _sender.Received(1).SendAsync(BirthdayMessageFormatter.Format(Today), Arg.Any<CancellationToken>());
     }
 }
