@@ -89,9 +89,9 @@
                             }
                             else
                             {
-                                <button type="button" class="nes-btn birthdays-icon-btn" title="Редагувати"
+                                <button type="button" class="nes-btn birthdays-icon-btn" title="Редагувати" disabled="@_busy"
                                         @onclick="() => StartEdit(item)">✏️</button>
-                                <button type="button" class="nes-btn birthdays-icon-btn" title="Видалити"
+                                <button type="button" class="nes-btn birthdays-icon-btn" title="Видалити" disabled="@_busy"
                                         @onclick="() => AskDelete(item.Id)">🗑️</button>
                             }
                             @if (_rowError is not null && _confirmDeleteId == item.Id)

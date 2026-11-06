@@ -5,7 +5,7 @@ description: Use when writing or reviewing any code in the DzhusShelter repo (Bl
 
 # Dzhus Shelter Conventions
 
-Dzhus Shelter is a personal dashboard, no auth — single user. As of [docs/architecture.md](../../../docs/architecture.md), it's split across three projects — see that doc before assuming "Blazor does everything." Feature pages not yet rebuilt against that architecture are still static mockups in the original single-project Blazor app; real data/logic gets added incrementally, one feature at a time, each backed by a spec.
+Dzhus Shelter is a personal dashboard, no auth — single user. As of [docs/architecture.md](../../../docs/architecture.md), it's split across several projects — see that doc before assuming "Blazor does everything." Feature pages not yet rebuilt against that architecture are still static mockups in the original single-project Blazor app; real data/logic gets added incrementally, one feature at a time, each backed by a spec.
 
 ## Project layout
 
@@ -17,7 +17,8 @@ All projects live under `src/`, one folder per project (see `docs/superpowers/pl
   - `Components/Shared/` — reusable components (e.g. `PixelCard.razor`)
   - `wwwroot/` — static assets, `app.css`, NES.css theme
 - `src/DzhusShelter.Api/` — Clean Architecture (Domain/Application/Infrastructure/Controllers), CQRS, EF Core + PostgreSQL, one controller per feature
-- `src/DzhusShelter.TelegramBot/` — bot worker process, calls `DzhusShelter.Api` for writes
+- `src/DzhusShelter.TelegramBot/` — manager bot worker (interactive, calls `DzhusShelter.Api` for writes)
+- `src/DzhusShelter.MainBot/` — main bot worker: send-only notifications (birthday reminders), polls `DzhusShelter.Api`; not the interactive manager bot
 - `docs/specs/` — one spec per feature, written before building it (see `add-feature-page` skill)
 - `docs/architecture.md` — cross-cutting decisions (why three projects, CQRS convention, security posture) that apply to every feature built after it was written
 

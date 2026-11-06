@@ -65,6 +65,8 @@ One-time prerequisite: the main bot already exists in @BotFather. Put its token 
 
 `API_KEY_MAIN_BOT` is its own key (generate it like the others above). It is accepted only by the two birthday-notification endpoints (list pending / acknowledge) — everything else answers 401/403 for it, so a leaked bot key can't read or change any other data.
 
+The `dzhusshelter-main-bot` image only exists on Docker Hub after the CI run on `main` that first includes it; pulling earlier makes `docker compose pull` fail for the whole stack, so wait for that CI run before `pull`/`up -d`.
+
 After adding the two new `.env` lines, apply with `sudo docker compose pull && sudo docker compose up -d`, then check `sudo docker compose logs main-bot`.
 
 ## Protecting the Postgres volume (important!)
